@@ -35,9 +35,53 @@ parameters:
     description: Network ID to use for the instance.
     default: 2f123e83-e728-494d-b694-3cdae6582875
 
+  SubnetId:
+    type: string
+    default: c6014938-ab67-4a13-b27a-511357693381  
+  
 
 
 resources:
+  
+  security_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      name: test_security_group
+      rules: [ {"direction": egress,
+              "remote_ip_prefix": 0.0.0.0/0,
+              "port_range_min": 1,
+              "port_range_max": 65535,
+              "ethertype": IPv4,
+              "protocol": tcp},
+             {"direction": ingress,
+              "remote_ip_prefix": 0.0.0.0/0,
+              "port_range_min": 22,
+              "port_range_max": 22,
+              "ethertype": IPv4,
+              "protocol": tcp},
+              {"direction": ingress,
+              "remote_ip_prefix": 0.0.0.0/0,
+              "port_range_min": 80,
+              "port_range_max": 80,
+              "ethertype": IPv4,
+              "protocol": tcp},
+              {"direction": ingress,
+              "remote_ip_prefix": 0.0.0.0/0,
+              "port_range_min": 443,
+              "port_range_max": 443,
+              "ethertype": IPv4,
+              "protocol": tcp}]    
+
+  server_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: NetID }
+      fixed_ips:
+        - subnet_id: { get_param: SubnetId  }
+      security_groups: 
+        - { get_resource: security_group }
+
+
   docker_server:
     type: OS::Nova::Server
     properties:
@@ -45,7 +89,8 @@ resources:
       image: { get_param: image }
       flavor: { get_param: flavor}
       networks:
-        - network: { get_param: NetID }
+        - port: { get_resource: server_port }
+
       user_data: |
         #!/bin/bash -v
         sudo -i
@@ -54,8 +99,8 @@ resources:
 
         apt-get update -y
         apt-get install docker.io -y
-        echo "HTTP_PROXY="http://10.144.106.132:8678"" >> /etc/default/docker 
-        echo "HTTPS_PROXY="http://10.144.106.132:8678"" >> /etc/default/docker 
+        echo "http_proxy=http://10.144.106.132:8678">>/etc/default/docker
+        echo "https_proxy=http://10.144.106.132:8678">>/etc/default/docker
         systemctl stop docker
         systemctl start docker
         docker run --name docker-nginx -p 80:80 -d nginx
@@ -70,9 +115,7 @@ resources:
     type: OS::Nova::FloatingIPAssociation
     properties:
       floating_ip: { get_resource: server_floating_ip}
-      server_id: { get_resource: docker_server}      
-       
-
+      server_id: { get_resource: docker_server}    
 
 
 outputs:
