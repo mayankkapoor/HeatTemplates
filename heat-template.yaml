@@ -38,11 +38,35 @@ parameters:
   SubnetId:
     type: string
     default: c6014938-ab67-4a13-b27a-511357693381  
+
   
 
 
 resources:
+  internal_net:
+    type: OS::Neutron::Net
+    properties:
+      name: "test_private_net"
+
+    
+
+  internal_subnet:
+    type: OS::Neutron::Subnet
+    properties:
+      name: "test_private_subnet"
+      network_id: { get_resource: internal_net }
+      cidr: "10.8.1.0/24"
+      gateway_ip: "10.8.1.2"
+
   
+
+
+  my_key:
+    type: OS::Nova::KeyPair
+    properties:
+      save_private_key: true
+      name: {get_param: key}
+
   security_group:
     type: OS::Neutron::SecurityGroup
     properties:
@@ -75,9 +99,9 @@ resources:
   server_port:
     type: OS::Neutron::Port
     properties:
-      network_id: { get_param: NetID }
+      network_id: { get_resource: internal_net }
       fixed_ips:
-        - subnet_id: { get_param: SubnetId  }
+        - subnet_id: { get_resource: internal_subnet  }
       security_groups: 
         - { get_resource: security_group }
 
@@ -85,7 +109,7 @@ resources:
   docker_server:
     type: OS::Nova::Server
     properties:
-      key_name: {get_param: key}
+      key_name: { get_resource: my_key }
       image: { get_param: image }
       flavor: { get_param: flavor}
       networks:
@@ -119,10 +143,6 @@ resources:
 
 
 outputs:
-  url:
-    description: Public address of apache
-    value:
-      str_replace:
-        template: http://host
-        params:
-          host: {get_attr: [docker_server, networks, private, 0]}
+  private_key:
+    description: Private key
+    value: { get_attr: [ my_key, private_key ] }
