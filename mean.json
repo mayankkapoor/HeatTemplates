@@ -1,0 +1,227 @@
+{
+    "heat_template_version": "2013-05-23",
+    "description": "Dockerize a multi-node application with OpenStack Heat. This template defines two docker containers running apache with php and mysql database.\n",
+    "parameters":
+    {
+        "public_net":
+        {
+            "default": "non-prod2",
+            "type": "string",
+            "description": "name of public network for which floating IP addresses will be allocated."
+        },
+        "NetID":
+        {
+            "default": "2f123e83-e728-494d-b694-3cdae6582875",
+            "type": "string",
+            "description": "Network ID to use for the instance."
+        },
+        "image":
+        {
+            "default": "Ubuntu1604",
+            "type": "string",
+            "description": "Name or ID of the image to use for the Docker server.  This needs to be built with os-collect-config tools from a fedora base image.\n"
+        },
+        "availability_zone":
+        {
+            "default": "nova",
+            "type": "string"
+        },
+        "volume_size":
+        {
+            "default": 10,
+            "type": "number"
+        },
+        "key":
+        {
+            "default": "mykey",
+            "type": "string",
+            "description": "Name of a KeyPair to enable SSH access to the instance. Note that the default user is ec2-user.\n"
+        },
+        "SubnetId":
+        {
+            "default": "c6014938-ab67-4a13-b27a-511357693381",
+            "type": "string"
+        },
+        "flavor":
+        {
+            "default": "m1.tiny",
+            "type": "string",
+            "description": "Instance type for the docker server."
+        }
+    },
+    "resources":
+    {
+        "internal_net":
+        {
+            "type": "OS::Neutron::Net",
+            "properties":
+            {
+                "name": "test_private_net"
+            }
+        },
+        "my_key":
+        {
+            "type": "OS::Nova::KeyPair",
+            "properties":
+            {
+                "name":
+                {
+                    "get_param": "key"
+                },
+                "save_private_key": true
+            }
+        },
+        "server_floating_ip":
+        {
+            "type": "OS::Nova::FloatingIP",
+            "properties":
+            {
+                "pool":
+                {
+                    "get_param": "public_net"
+                }
+            }
+        },
+        "associate_floating_ip":
+        {
+            "type": "OS::Nova::FloatingIPAssociation",
+            "properties":
+            {
+                "server_id":
+                {
+                    "get_resource": "docker_server"
+                },
+                "floating_ip":
+                {
+                    "get_resource": "server_floating_ip"
+                }
+            }
+        },
+        "server_port":
+        {
+            "type": "OS::Neutron::Port",
+            "properties":
+            {
+                "network_id":
+                {
+                    "get_resource": "internal_net"
+                },
+                "fixed_ips": [
+                {
+                    "subnet_id":
+                    {
+                        "get_resource": "internal_subnet"
+                    }
+                }],
+                "security_groups": [
+                {
+                    "get_resource": "security_group"
+                }]
+            }
+        },
+        "security_group":
+        {
+            "type": "OS::Neutron::SecurityGroup",
+            "properties":
+            {
+                "rules": [
+                {
+                    "direction": "egress",
+                    "protocol": "tcp",
+                    "ethertype": "IPv4",
+                    "remote_ip_prefix": "0.0.0.0/0",
+                    "port_range_max": 65535,
+                    "port_range_min": 1
+                },
+                {
+                    "direction": "ingress",
+                    "protocol": "tcp",
+                    "ethertype": "IPv4",
+                    "remote_ip_prefix": "0.0.0.0/0",
+                    "port_range_max": 22,
+                    "port_range_min": 22
+                },
+                {
+                    "direction": "ingress",
+                    "protocol": "tcp",
+                    "ethertype": "IPv4",
+                    "remote_ip_prefix": "0.0.0.0/0",
+                    "port_range_max": 80,
+                    "port_range_min": 80
+                },
+                {
+                    "direction": "ingress",
+                    "protocol": "tcp",
+                    "ethertype": "IPv4",
+                    "remote_ip_prefix": "0.0.0.0/0",
+                    "port_range_max": 443,
+                    "port_range_min": 443
+                },
+                {
+                    "direction": "ingress",
+                    "protocol": "tcp",
+                    "ethertype": "IPv4",
+                    "remote_ip_prefix": "0.0.0.0/0",
+                    "port_range_max": 3306,
+                    "port_range_min": 3306
+                }],
+                "name": "test_security_group"
+            }
+        },
+        "internal_subnet":
+        {
+            "type": "OS::Neutron::Subnet",
+            "properties":
+            {
+                "network_id":
+                {
+                    "get_resource": "internal_net"
+                },
+                "cidr": "10.8.1.0/24",
+                "gateway_ip": "10.8.1.2",
+                "name": "test_private_subnet"
+            }
+        },
+        "docker_server":
+        {
+            "type": "OS::Nova::Server",
+            "properties":
+            {
+                "key_name":
+                {
+                    "get_resource": "my_key"
+                },
+                "image":
+                {
+                    "get_param": "image"
+                },
+                "user_data": "#!/bin/bash -v\nsudo -i\nexport http_proxy=http://10.144.106.132:8678\nexport https_proxy=http://10.144.106.132:8678\napt-get update -y\napt-get install git -y\napt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927\necho \"deb http://repo.mongodb.org/apt/ubuntu trusty/mongodb-org/3.2 multiverse\" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.2.list\napt-get update -y\napt-get install -y mongodb-org\ncurl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -\napt-get install -y nodejs\napt-get install -y build-essential\nnpm install -g bower\nnpm install -g gulp\nnpm install -g mean-cli\nnpm install -g yarn\n\n\n  \n",
+                "flavor":
+                {
+                    "get_param": "flavor"
+                },
+                "networks": [
+                {
+                    "port":
+                    {
+                        "get_resource": "server_port"
+                    }
+                }]
+            }
+        }
+    },
+    "outputs":
+    {
+        "private_key":
+        {
+            "description": "Private key",
+            "value":
+            {
+                "get_attr": [
+                    "my_key",
+                    "private_key"
+                ]
+            }
+        }
+    }
+}
