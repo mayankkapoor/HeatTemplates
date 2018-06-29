@@ -123,7 +123,6 @@ resources:
     type: OS::Nova::Server
     properties:
       key_name: { get_resource: my_key }
-      image: { get_param: image }
       flavor: { get_param: flavor}
       networks:
         - port: { get_resource: server_port }
