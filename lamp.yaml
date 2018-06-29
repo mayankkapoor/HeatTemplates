@@ -1,0 +1,186 @@
+heat_template_version: 2013-05-23
+description: >
+  creating lamp stack linux, apache mysql and php
+
+parameters:
+  key:
+    type: string
+    description: >
+      Name of a KeyPair to enable SSH access to the instance. Note that the
+      default user is ec2-user.
+    default: mykey
+
+  flavor:
+    type: string
+    description: Instance type for the docker server.
+    default: m1.tiny
+
+  public_net:
+    type: string
+    description: name of public network for which floating IP addresses will be allocated.
+    default: non-prod2
+
+    
+  availability_zone:
+    type: string
+    default: nova
+
+  internal_net:
+    type: string
+    description: internal network name
+  internal_subnet:
+    type: string
+    description: internal subnet name
+  security_group:
+    type: string
+    description: security group name
+
+  volume_name:
+    type: string
+    description: name of the bootable volume
+  volume_size:
+    type: number
+    default: 10
+  boot_image:
+    type: string
+    default: Ubuntu1604
+
+
+
+
+
+resources:
+  internal_net:
+    type: OS::Neutron::Net
+    properties:
+      name: { get_param: internal_net }
+
+    
+
+  internal_subnet:
+    type: OS::Neutron::Subnet
+    properties:
+      name: { get_param: internal_subnet }
+      network_id: { get_resource: internal_net }
+      cidr: "10.8.1.0/24"
+      gateway_ip: "10.8.1.2"
+
+
+  my_key:
+    type: OS::Nova::KeyPair
+    properties:
+      save_private_key: true
+      name: {get_param: key}
+
+  security_group:
+    type: OS::Neutron::SecurityGroup
+    properties:
+      name: { get_param: security_group }
+      rules: [ {"direction": egress,
+              "remote_ip_prefix": 0.0.0.0/0,
+              "port_range_min": 1,
+              "port_range_max": 65535,
+              "ethertype": IPv4,
+              "protocol": tcp},
+             {"direction": ingress,
+              "remote_ip_prefix": 0.0.0.0/0,
+              "port_range_min": 22,
+              "port_range_max": 22,
+              "ethertype": IPv4,
+              "protocol": tcp},
+              {"direction": ingress,
+              "remote_ip_prefix": 0.0.0.0/0,
+              "port_range_min": 80,
+              "port_range_max": 80,
+              "ethertype": IPv4,
+              "protocol": tcp},
+              {"direction": ingress,
+              "remote_ip_prefix": 0.0.0.0/0,
+              "port_range_min": 443,
+              "port_range_max": 443,
+              "ethertype": IPv4,
+              "protocol": tcp},
+              {"direction": ingress,
+              "remote_ip_prefix": 0.0.0.0/0,
+              "port_range_min": 3306,
+              "port_range_max": 3306,
+              "ethertype": IPv4,
+              "protocol": tcp}
+
+            ]    
+
+  server_port:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_resource: internal_net }
+      fixed_ips:
+        - subnet_id: { get_resource: internal_subnet  }
+      security_groups: 
+        - { get_resource: security_group }
+
+
+  lamp_server:
+    type: OS::Nova::Server
+    properties:
+      key_name: { get_resource: my_key }
+      image: { get_param: image }
+      flavor: { get_param: flavor}
+      networks:
+        - port: { get_resource: server_port }
+      block_device_mapping:
+        - device_name: vda
+          volume_id: { get_resource: bootable_volume }
+          delete_on_termination: True
+
+
+      user_data: |
+        #!/bin/bash -v
+        sudo -i
+        export http_proxy=http://10.144.106.132:8678
+        export https_proxy=http://10.144.106.132:8678
+        apt-get update -y
+        debconf-set-selections <<< "mysql-server mysql-server/root_password password 'root'"
+        debconf-set-selections <<< "mysql-server mysql-server/root_password_again password 'root'"
+        export DEBIAN_FRONTEND="noninteractive"
+        apt-get install -y mysql-server
+        service mysql restart
+        apt-get install apache2 -y
+        apt-get install php libapache2-mod-php php-mcrypt php-mysql -y
+        
+
+          
+
+  server_floating_ip:
+    type: OS::Nova::FloatingIP
+    properties:
+      pool: { get_param: public_net}
+
+  associate_floating_ip:
+    type: OS::Nova::FloatingIPAssociation
+    properties:
+      floating_ip: { get_resource: server_floating_ip}
+      server_id: { get_resource: lamp_server}
+
+  bootable_volume:
+    type: OS::Cinder::Volume
+    properties:
+      name: { get_param: volume_name }
+      size: { get_param: volume_size }
+      availability_zone: { get_param: availability_zone }
+      image: { get_param: boot_image }
+
+#  volume_attachment:
+#    type: OS::Cinder::VolumeAttachment
+#    properties:
+#      volume_id: { get_resource: cinder_volume }
+#      instance_uuid: { get_resource: docker_server }
+#      mountpoint: /dev/vdc
+
+
+outputs:
+  private_key:
+    description: Private key
+    value: { get_attr: [ my_key, private_key ] }
+  network:
+    description: ip address of vm
+    value: { get_attr: [ lamp_server, networks ] }
