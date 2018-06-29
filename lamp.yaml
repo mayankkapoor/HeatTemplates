@@ -1,4 +1,5 @@
 heat_template_version: 2013-05-23
+
 description: >
   creating lamp stack linux, apache mysql and php
 
@@ -20,28 +21,27 @@ parameters:
     description: name of public network for which floating IP addresses will be allocated.
     default: non-prod2
 
-    
-  availability_zone:
+  availabilityZone:
     type: string
     default: nova
 
-  internal_net:
+  internalNet:
     type: string
     description: internal network name
-  internal_subnet:
+  internalSubnet:
     type: string
     description: internal subnet name
-  security_group:
+  securityGroup:
     type: string
     description: security group name
 
-  volume_name:
+  volumeName:
     type: string
     description: name of the bootable volume
-  volume_size:
+  volumeSize:
     type: number
     default: 10
-  boot_image:
+  bootImage:
     type: string
     default: Ubuntu1604
 
@@ -53,14 +53,14 @@ resources:
   internal_net:
     type: OS::Neutron::Net
     properties:
-      name: { get_param: internal_net }
+      name: { get_param: internalNet }
 
     
 
   internal_subnet:
     type: OS::Neutron::Subnet
     properties:
-      name: { get_param: internal_subnet }
+      name: { get_param: internalSubnet }
       network_id: { get_resource: internal_net }
       cidr: "10.8.1.0/24"
       gateway_ip: "10.8.1.2"
@@ -75,7 +75,7 @@ resources:
   security_group:
     type: OS::Neutron::SecurityGroup
     properties:
-      name: { get_param: security_group }
+      name: { get_param: securityGroup }
       rules: [ {"direction": egress,
               "remote_ip_prefix": 0.0.0.0/0,
               "port_range_min": 1,
@@ -164,10 +164,10 @@ resources:
   bootable_volume:
     type: OS::Cinder::Volume
     properties:
-      name: { get_param: volume_name }
-      size: { get_param: volume_size }
-      availability_zone: { get_param: availability_zone }
-      image: { get_param: boot_image }
+      name: { get_param: volumeName }
+      size: { get_param: volumeSize }
+      availability_zone: { get_param: availabilityZone }
+      image: { get_param: bootImage }
 
 #  volume_attachment:
 #    type: OS::Cinder::VolumeAttachment
