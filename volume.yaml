@@ -1,4 +1,5 @@
 heat_template_version: 2013-05-23
+
 description: >
   attaching a volume to existing stack
 
@@ -13,6 +14,9 @@ parameters:
   serverId:
     type: string
     description: name of the server
+  availabilityZone:
+    type: string
+    default: nova  
 
 
 
