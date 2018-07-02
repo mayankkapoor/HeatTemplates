@@ -1,0 +1,36 @@
+heat_template_version: 2013-05-23
+description: >
+  attaching a volume to existing stack
+
+parameters:
+
+  volumeName:
+    type: string
+    description: name of the bootable volume
+  volumeSize:
+    type: number
+    default: 10
+  serverId:
+    type: string
+    description: name of the server
+
+
+
+resources:
+
+  cinder_volume:
+    type: OS::Cinder::Volume
+    properties:
+      name: { get_param: volumeName }
+      size: { get_param: volumeSize }
+      availability_zone: { get_param: availabilityZone }
+
+
+  volume_attachment:
+    type: OS::Cinder::VolumeAttachment
+    properties:
+      volume_id: { get_resource: cinder_volume }
+      instance_uuid: { get_param: serverId }
+      mountpoint: /dev/vdc
+
+
