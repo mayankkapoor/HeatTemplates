@@ -133,7 +133,7 @@ resources:
       flavor: { get_param: flavor}
       networks:
         - port: { get_resource: server_port }
-      block_device_mapping:
+      block_device_mapping_v2:
         - device_name: vda
           volume_id: { get_resource: bootable_volume }
           delete_on_termination: True
