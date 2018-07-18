@@ -72,42 +72,42 @@ resources:
       save_private_key: true
       name: {get_param: key}
 
-  security_group:
-    type: OS::Neutron::SecurityGroup
-    properties:
-      name: { get_param: securityGroup }
-      rules: [ {"direction": egress,
-              "remote_ip_prefix": 0.0.0.0/0,
-              "port_range_min": 1,
-              "port_range_max": 65535,
-              "ethertype": IPv4,
-              "protocol": tcp},
-             {"direction": ingress,
-              "remote_ip_prefix": 0.0.0.0/0,
-              "port_range_min": 22,
-              "port_range_max": 22,
-              "ethertype": IPv4,
-              "protocol": tcp},
-              {"direction": ingress,
-              "remote_ip_prefix": 0.0.0.0/0,
-              "port_range_min": 80,
-              "port_range_max": 80,
-              "ethertype": IPv4,
-              "protocol": tcp},
-              {"direction": ingress,
-              "remote_ip_prefix": 0.0.0.0/0,
-              "port_range_min": 443,
-              "port_range_max": 443,
-              "ethertype": IPv4,
-              "protocol": tcp},
-              {"direction": ingress,
-              "remote_ip_prefix": 0.0.0.0/0,
-              "port_range_min": 3306,
-              "port_range_max": 3306,
-              "ethertype": IPv4,
-              "protocol": tcp}
-
-            ]    
+#  security_group:
+#    type: OS::Neutron::SecurityGroup
+#    properties:
+#      name: { get_param: securityGroup }
+#      rules: [ {"direction": egress,
+#              "remote_ip_prefix": 0.0.0.0/0,
+#              "port_range_min": 1,
+#              "port_range_max": 65535,
+#              "ethertype": IPv4,
+#              "protocol": tcp},
+#             {"direction": ingress,
+#              "remote_ip_prefix": 0.0.0.0/0,
+#              "port_range_min": 22,
+#              "port_range_max": 22,
+#              "ethertype": IPv4,
+#              "protocol": tcp},
+#              {"direction": ingress,
+#              "remote_ip_prefix": 0.0.0.0/0,
+#              "port_range_min": 80,
+#              "port_range_max": 80,
+#              "ethertype": IPv4,
+#              "protocol": tcp},
+#              {"direction": ingress,
+#              "remote_ip_prefix": 0.0.0.0/0,
+#              "port_range_min": 443,
+#              "port_range_max": 443,
+#              "ethertype": IPv4,
+#              "protocol": tcp},
+#              {"direction": ingress,
+#              "remote_ip_prefix": 0.0.0.0/0,
+#              "port_range_min": 3306,
+#              "port_range_max": 3306,
+#              "ethertype": IPv4,
+#              "protocol": tcp}
+#
+#            ]
 
 #  server_port:
 #    type: OS::Neutron::Port
@@ -115,7 +115,7 @@ resources:
 #      network_id: { get_resource: internal_net }
 #      fixed_ips:
 #        - subnet_id: { get_resource: internal_subnet  }
-#      security_groups: 
+#      security_groups:
 #        - { get_resource: security_group }
 
 
