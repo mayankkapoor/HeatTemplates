@@ -167,12 +167,6 @@ resources:
       availability_zone: { get_param: availabilityZone }
       image: { get_param: bootImage }
 
-  volume_attachment:
-    type: OS::Cinder::VolumeAttachment
-    properties:
-      volume_id: { get_resource: cinder_volume }
-      instance_uuid: { get_resource: docker_server }
-      mountpoint: /dev/vdc
 
 
 outputs:
