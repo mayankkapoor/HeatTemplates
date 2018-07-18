@@ -1,0 +1,33 @@
+heat_template_version: 2013-05-23
+
+description: >
+  Dockerize a multi-node application with OpenStack Heat.
+  This template defines two docker containers running
+  apache with php and mysql database.
+
+parameters:
+  key:
+    type: string
+    description: >
+      Name of a KeyPair to enable SSH access to the instance. Note that the
+      default user is ec2-user.
+    default: mykey
+
+
+
+
+
+
+resources:
+
+  my_key:
+    type: OS::Nova::KeyPair
+    properties:
+      save_private_key: true
+      name: {get_param: key}
+
+
+outputs:
+  private_key:
+    description: Private key
+    value: { get_attr: [ my_key, private_key ] }
