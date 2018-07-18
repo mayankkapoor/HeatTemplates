@@ -1,4 +1,5 @@
 heat_template_version: 2013-05-23
+
 description: >
   creating lamp stack linux, apache mysql and php
 
@@ -108,14 +109,14 @@ resources:
 
             ]    
 
-  server_port:
-    type: OS::Neutron::Port
-    properties:
-      network_id: { get_resource: internal_net }
-      fixed_ips:
-        - subnet_id: { get_resource: internal_subnet  }
-      security_groups: 
-        - { get_resource: security_group }
+#  server_port:
+#    type: OS::Neutron::Port
+#    properties:
+#      network_id: { get_resource: internal_net }
+#      fixed_ips:
+#        - subnet_id: { get_resource: internal_subnet  }
+#      security_groups: 
+#        - { get_resource: security_group }
 
 
 #  lamp_server:
@@ -144,9 +145,9 @@ resources:
 #        service mysql restart
 #        apt-get install apache2 -y
 #        apt-get install php libapache2-mod-php php-mcrypt php-mysql -y
-#        
 #
-#          
+#
+#
 #
 #  server_floating_ip:
 #    type: OS::Nova::FloatingIP
@@ -175,10 +176,10 @@ resources:
 #      mountpoint: /dev/vdc
 
 
-outputs:
-  private_key:
-    description: Private key
-    value: { get_attr: [ my_key, private_key ] }
-  network:
-    description: ip address of vm
-    value: { get_attr: [ lamp_server, networks ] }
+#outputs:
+#  private_key:
+#    description: Private key
+#    value: { get_attr: [ my_key, private_key ] }
+#  network:
+#    description: ip address of vm
+#    value: { get_attr: [ lamp_server, networks ] }
