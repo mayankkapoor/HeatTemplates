@@ -126,46 +126,46 @@ resources:
       availability_zone: { get_param: availabilityZone }
       image: { get_param: bootImage }
 
-  lamp_server:
-    type: OS::Nova::Server
-    properties:
-      key_name: { get_resource: my_key }
-      flavor: { get_param: flavor}
-      networks:
-        - port: { get_resource: server_port }
-      block_device_mapping_v2:
-        - device_name: vda
-          volume_id: { get_resource: bootable_volume }
-          delete_on_termination: True
+  #lamp_server:
+  #  type: OS::Nova::Server
+  #  properties:
+  #    key_name: { get_resource: my_key }
+  #    flavor: { get_param: flavor}
+  #    networks:
+  #      - port: { get_resource: server_port }
+  #    block_device_mapping_v2:
+  #      - device_name: vda
+  #        volume_id: { get_resource: bootable_volume }
+  #        delete_on_termination: True
 
 
-      user_data: |
-        #!/bin/bash -v
-        sudo -i
-        export http_proxy=http://10.144.106.132:8678
-        export https_proxy=http://10.144.106.132:8678
-        apt-get update -y
-        debconf-set-selections <<< "mysql-server mysql-server/root_password password 'root'"
-        debconf-set-selections <<< "mysql-server mysql-server/root_password_again password 'root'"
-        export DEBIAN_FRONTEND="noninteractive"
-        apt-get install -y mysql-server
-        service mysql restart
-        apt-get install apache2 -y
-        apt-get install php libapache2-mod-php php-mcrypt php-mysql -y
+  #    user_data: |
+  #      #!/bin/bash -v
+  #      sudo -i
+  #      export http_proxy=http://10.144.106.132:8678
+  #      export https_proxy=http://10.144.106.132:8678
+  #      apt-get update -y
+  #      debconf-set-selections <<< "mysql-server mysql-server/root_password password 'root'"
+  #      debconf-set-selections <<< "mysql-server mysql-server/root_password_again password 'root'"
+  #      export DEBIAN_FRONTEND="noninteractive"
+  #      apt-get install -y mysql-server
+  #      service mysql restart
+  #      apt-get install apache2 -y
+  #      apt-get install php libapache2-mod-php php-mcrypt php-mysql -y
         
 
           
 
-  server_floating_ip:
-    type: OS::Nova::FloatingIP
-    properties:
-      pool: { get_param: public_net}
+  #server_floating_ip:
+  #  type: OS::Nova::FloatingIP
+  #  properties:
+  #    pool: { get_param: public_net}
 
-  associate_floating_ip:
-    type: OS::Nova::FloatingIPAssociation
-    properties:
-      floating_ip: { get_resource: server_floating_ip}
-      server_id: { get_resource: lamp_server}
+  #associate_floating_ip:
+  #  type: OS::Nova::FloatingIPAssociation
+  #  properties:
+  #    floating_ip: { get_resource: server_floating_ip}
+  #    server_id: { get_resource: lamp_server}
 
 
 
