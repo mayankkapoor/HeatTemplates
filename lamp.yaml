@@ -91,7 +91,7 @@ resources:
     properties:
       network_id: { get_param: internalNet }
       fixed_ips:
-        - subnet_id: { get_param: internalSubNet  }
+        - subnet_id: { get_param: internalSubnet  }
       security_groups:
         - { get_resource: security_group }
 
