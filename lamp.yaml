@@ -99,7 +99,7 @@ resources:
   lamp_server:
     type: OS::Nova::Server
     properties:
-      key_name: { get_resource: my_key }
+      key_name: { get_param: key }
       flavor: { get_param: flavor}
       networks:
         - port: { get_resource: server_port }
