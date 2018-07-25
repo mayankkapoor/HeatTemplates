@@ -49,28 +49,6 @@ parameters:
 
 
 resources:
-  internal_net:
-    type: OS::Neutron::Net
-    properties:
-      name: { get_param: internalNet }
-
-    
-
-  internal_subnet:
-    type: OS::Neutron::Subnet
-    properties:
-      name: { get_param: internalSubnet }
-      network_id: { get_resource: internal_net }
-      cidr: "10.8.1.0/24"
-      gateway_ip: "10.8.1.2"
-
-
-  my_key:
-    type: OS::Nova::KeyPair
-    properties:
-      save_private_key: true
-      name: {get_param: key}
-
   security_group:
     type: OS::Neutron::SecurityGroup
     properties:
@@ -111,9 +89,9 @@ resources:
   server_port:
     type: OS::Neutron::Port
     properties:
-      network_id: { get_resource: internal_net }
+      network_id: { get_param: internalNet }
       fixed_ips:
-        - subnet_id: { get_resource: internal_subnet  }
+        - subnet_id: { get_param: internalSubNet  }
       security_groups:
         - { get_resource: security_group }
 
@@ -170,9 +148,6 @@ resources:
 
 
 outputs:
-  private_key:
-    description: Private key
-    value: { get_attr: [ my_key, private_key ] }
   network:
     description: ip address of vm
     value: { get_attr: [ lamp_server, networks ] }
