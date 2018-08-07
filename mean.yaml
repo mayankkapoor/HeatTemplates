@@ -1,8 +1,6 @@
 heat_template_version: 2013-05-23
 description: >
-  Dockerize a multi-node application with OpenStack Heat.
-  This template defines two docker containers running
-  apache with php and mysql database.
+  creating lamp stack linux, apache mysql and php
 
 parameters:
   key:
@@ -17,66 +15,44 @@ parameters:
     description: Instance type for the docker server.
     default: m1.tiny
 
-  image:
-    type: string
-    description: >
-      Name or ID of the image to use for the Docker server.  This needs to be
-      built with os-collect-config tools from a fedora base image.
-    default: Ubuntu1604
-
   public_net:
     type: string
     description: name of public network for which floating IP addresses will be allocated.
     default: non-prod2
 
-  NetID:
-    type: string
-    description: Network ID to use for the instance.
-    default: 2f123e83-e728-494d-b694-3cdae6582875
-
-  SubnetId:
-    type: string
-    default: c6014938-ab67-4a13-b27a-511357693381  
-  volume_size:
-    type: number 
-    default: 10 
-    
-  availability_zone:
+  availabilityZone:
     type: string
     default: nova
 
-  
+  internalNet:
+    type: string
+    description: internal network name
+  internalSubnet:
+    type: string
+    description: internal subnet name
+  securityGroup:
+    type: string
+    description: security group name
+
+  volumeName:
+    type: string
+    description: name of the bootable volume
+  volumeSize:
+    type: number
+    default: 10
+  bootImage:
+    type: string
+    default: Ubuntu1604
+
+
+
 
 
 resources:
-  internal_net:
-    type: OS::Neutron::Net
-    properties:
-      name: "test_private_net"
-
-    
-
-  internal_subnet:
-    type: OS::Neutron::Subnet
-    properties:
-      name: "test_private_subnet"
-      network_id: { get_resource: internal_net }
-      cidr: "10.8.1.0/24"
-      gateway_ip: "10.8.1.2"
-
-  
-
-
-  my_key:
-    type: OS::Nova::KeyPair
-    properties:
-      save_private_key: true
-      name: {get_param: key}
-
   security_group:
     type: OS::Neutron::SecurityGroup
     properties:
-      name: test_security_group
+      name: { get_param: securityGroup }
       rules: [ {"direction": egress,
               "remote_ip_prefix": 0.0.0.0/0,
               "port_range_min": 1,
@@ -108,26 +84,30 @@ resources:
               "ethertype": IPv4,
               "protocol": tcp}
 
-            ]    
+            ]
 
   server_port:
     type: OS::Neutron::Port
     properties:
-      network_id: { get_resource: internal_net }
+      network_id: { get_param: internalNet }
       fixed_ips:
-        - subnet_id: { get_resource: internal_subnet  }
-      security_groups: 
+        - subnet_id: { get_param: internalSubnet  }
+      security_groups:
         - { get_resource: security_group }
 
 
-  docker_server:
+  lamp_server:
     type: OS::Nova::Server
     properties:
-      key_name: { get_resource: my_key }
-      image: { get_param: image }
+      key_name: { get_param: key }
       flavor: { get_param: flavor}
       networks:
         - port: { get_resource: server_port }
+      block_device_mapping_v2:
+        - device_name: vda
+          volume_id: { get_resource: bootable_volume }
+          delete_on_termination: True
+
 
       user_data: |
         #!/bin/bash -v
@@ -147,9 +127,9 @@ resources:
         npm install -g gulp
         npm install -g mean-cli
         npm install -g yarn
-        
 
-          
+
+
 
   server_floating_ip:
     type: OS::Nova::FloatingIP
@@ -160,24 +140,19 @@ resources:
     type: OS::Nova::FloatingIPAssociation
     properties:
       floating_ip: { get_resource: server_floating_ip}
-      server_id: { get_resource: docker_server}  
+      server_id: { get_resource: lamp_server}
 
-  # cinder_volume:
-  #   type: OS::Cinder::Volume
-  #   properties:
-  #     name: test_volume
-  #     size: { get_param: volume_size }
-  #     availability_zone: { get_param: availability_zone }
+  bootable_volume:
+    type: OS::Cinder::Volume
+    properties:
+      name: { get_param: volumeName }
+      size: { get_param: volumeSize }
+      availability_zone: { get_param: availabilityZone }
+      image: { get_param: bootImage }
 
-  # volume_attachment:
-  #   type: OS::Cinder::VolumeAttachment
-  #   properties:
-  #     volume_id: { get_resource: cinder_volume }
-  #     instance_uuid: { get_resource: docker_server }
-  #     mountpoint: /dev/vdc      
 
 
 outputs:
-  private_key:
-    description: Private key
-    value: { get_attr: [ my_key, private_key ] }
+  network:
+    description: ip address of vm
+    value: { get_attr: [ lamp_server, networks ] }
