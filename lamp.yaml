@@ -110,7 +110,8 @@ resources:
 
       user_data: |
         #!/bin/bash -v
-        sudo hostname localhost
+        sudo echo  > /etc/hostname 
+        sudo echo "localhost" > /etc/hostname
         sudo -i
         echo  > /etc/apt/sources.list
         echo "###### Ubuntu Main Repos" >> /etc/apt/sources.list
