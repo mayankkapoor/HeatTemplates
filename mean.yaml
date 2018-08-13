@@ -111,6 +111,7 @@ resources:
 
       user_data: |
         #!/bin/bash -v
+        sudo hostnmae localhost
         sudo -i
         export http_proxy=http://10.144.106.132:8678
         export https_proxy=http://10.144.106.132:8678
