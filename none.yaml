@@ -113,6 +113,7 @@ resources:
         deb-src http://in.archive.ubuntu.com/ubuntu/ xenial-security main restricted universe multiverse 
         deb-src http://in.archive.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse  
         EOL
+        apt-get update -y
 
 
   server_floating_ip:
