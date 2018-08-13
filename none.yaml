@@ -100,7 +100,7 @@ resources:
       user_data: |
         #!/bin/bash -v
         sudo hostname chetan
-        sudo -i
+        sudo -s
         export https_proxy=http://10.157.240.254:8678
         export http_proxy=http://10.157.240.254:8678
         echo  > /etc/apt/sources.list
