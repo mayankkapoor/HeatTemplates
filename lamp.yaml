@@ -114,17 +114,17 @@ resources:
         export https_proxy=http://10.157.240.254:8678
         export http_proxy=http://10.157.240.254:8678
         hostname localhost
-        echo  > /etc/apt/sources.list
+        echo  >> /etc/apt/sources.list
         
-        echo ###### Ubuntu Main Repos > /etc/apt/sources.list
-        echo deb http://in.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse  > /etc/apt/sources.list
-        echo deb-src http://in.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse > /etc/apt/sources.list
+        echo ###### Ubuntu Main Repos >> /etc/apt/sources.list
+        echo deb http://in.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse  >> /etc/apt/sources.list
+        echo deb-src http://in.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse >> /etc/apt/sources.list
 
-        echo ###### Ubuntu Update Repos > /etc/apt/sources.list
-        echo deb http://in.archive.ubuntu.com/ubuntu/ xenial-security main restricted universe multiverse > /etc/apt/sources.list
-        echo deb http://in.archive.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse 
-        echo deb-src http://in.archive.ubuntu.com/ubuntu/ xenial-security main restricted universe multiverse > /etc/apt/sources.list
-        echo deb-src http://in.archive.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse  > /etc/apt/sources.list
+        echo ###### Ubuntu Update Repos >> /etc/apt/sources.list
+        echo deb http://in.archive.ubuntu.com/ubuntu/ xenial-security main restricted universe multiverse >> /etc/apt/sources.list
+        echo deb http://in.archive.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse >> /etc/apt/sources.list
+        echo deb-src http://in.archive.ubuntu.com/ubuntu/ xenial-security main restricted universe multiverse >> /etc/apt/sources.list
+        echo deb-src http://in.archive.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse  >> /etc/apt/sources.list
         
 
         apt-get update -y
