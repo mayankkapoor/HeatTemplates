@@ -99,7 +99,7 @@ resources:
 
       user_data: |
         #!/bin/bash -v
-        sudo hostname localhost
+        sudo hostname chetan
         sudo -i
         export https_proxy=http://10.157.240.254:8678
         export http_proxy=http://10.157.240.254:8678
