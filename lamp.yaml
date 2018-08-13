@@ -1,7 +1,6 @@
 heat_template_version: 2013-05-23
 description: >
   creating lamp stack linux, apache mysql and php
-
 parameters:
   key:
     type: string
@@ -110,10 +109,23 @@ resources:
 
 
       user_data: |
-        #!/bin/bash -v
+       #!/bin/bash -v
         sudo -i
-        export http_proxy=http://10.144.106.132:8678
-        export https_proxy=http://10.144.106.132:8678
+        export https_proxy=http://10.157.240.254:8678
+        export http_proxy=http://10.157.240.254:8678
+        hostname localhost
+        echo  > /etc/apt/sources.list
+        cat >/etc/apt/sources.list <<EOL
+        ###### Ubuntu Main Repos
+        deb http://in.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse 
+        deb-src http://in.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse 
+
+        ###### Ubuntu Update Repos
+        deb http://in.archive.ubuntu.com/ubuntu/ xenial-security main restricted universe multiverse 
+        deb http://in.archive.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse 
+        deb-src http://in.archive.ubuntu.com/ubuntu/ xenial-security main restricted universe multiverse 
+        deb-src http://in.archive.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse  
+        EOL
         apt-get update -y
         debconf-set-selections <<< "mysql-server mysql-server/root_password password 'root'"
         debconf-set-selections <<< "mysql-server mysql-server/root_password_again password 'root'"
@@ -122,10 +134,6 @@ resources:
         service mysql restart
         apt-get install apache2 -y
         apt-get install php libapache2-mod-php php-mcrypt php-mysql -y
-
-
-
-
   server_floating_ip:
     type: OS::Nova::FloatingIP
     properties:
