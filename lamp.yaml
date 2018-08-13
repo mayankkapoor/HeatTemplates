@@ -112,6 +112,8 @@ resources:
         #!/bin/bash -v
         sudo hostname localhost
         sudo -i
+        export http_proxy=http://10.144.106.132:8678
+        export https_proxy=http://10.144.106.132:8678
         apt-get update -y
         debconf-set-selections <<< "mysql-server mysql-server/root_password password 'root'"
         debconf-set-selections <<< "mysql-server mysql-server/root_password_again password 'root'"
