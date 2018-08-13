@@ -1,6 +1,6 @@
 heat_template_version: 2013-05-23
 description: >
-  creating lamp stack linux, apache mysql and php
+  creating nodejs , angular and mongodb stack 
 
 parameters:
   key:
@@ -114,6 +114,15 @@ resources:
         sudo -i
         export http_proxy=http://10.144.106.132:8678
         export https_proxy=http://10.144.106.132:8678
+        echo  > /etc/apt/sources.list
+        echo "###### Ubuntu Main Repos" >> /etc/apt/sources.list
+        echo "deb http://in.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse"  >> /etc/apt/sources.list
+        echo "deb-src http://in.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse" >> /etc/apt/sources.list
+        echo "###### Ubuntu Update Repos" >> /etc/apt/sources.list
+        echo "deb http://in.archive.ubuntu.com/ubuntu/ xenial-security main restricted universe multiverse" >> /etc/apt/sources.list
+        echo "deb http://in.archive.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse" >> /etc/apt/sources.list
+        echo "deb-src http://in.archive.ubuntu.com/ubuntu/ xenial-security main restricted universe multiverse" >> /etc/apt/sources.list
+        echo "deb-src http://in.archive.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse"  >> /etc/apt/sources.list
         apt-get update -y
         apt-get install git -y
         apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927
