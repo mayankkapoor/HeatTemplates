@@ -99,10 +99,8 @@ resources:
 
       user_data: |
         #!/bin/bash -v
-        sudo hostname chetan
-        sudo -s
-        export https_proxy=http://10.157.240.254:8678
-        export http_proxy=http://10.157.240.254:8678
+        sudo hostname localhost
+        sudo -i
         echo  > /etc/apt/sources.list
         cat >/etc/apt/sources.list <<EOL
         ###### Ubuntu Main Repos
