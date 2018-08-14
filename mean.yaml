@@ -126,11 +126,9 @@ resources:
         echo "deb-src http://in.archive.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse"  >> /etc/apt/sources.list
         apt-get update -y
         apt-get install git -y
-        apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv EA312927
-        echo "deb http://repo.mongodb.org/apt/ubuntu trusty/mongodb-org/3.2 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-3.2.list
+        apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv 9DA31620334BD75D9DCB49F368818C72E52529D4
+        echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu xenial/mongodb-org/4.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-4.0.list
         apt-get update -y
-        mkdir -p /data/db
-        chmod -R 777 /data/db
         apt-get install -y mongodb-org
         curl -sL https://deb.nodesource.com/setup_6.x | sudo -E bash -
         apt-get install -y nodejs
