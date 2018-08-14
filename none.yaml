@@ -101,8 +101,8 @@ resources:
         #!/bin/bash -v
         sudo hostname localhost
         sudo -i
-        export http_proxy=http://10.144.106.132:8678
-        export https_proxy=http://10.144.106.132:8678
+        export http_proxy=http://10.157.240.254:8678
+        export https_proxy=http://10.157.240.254:8678
         echo  > /etc/apt/sources.list
         cat >/etc/apt/sources.list <<EOL
         ###### Ubuntu Main Repos
