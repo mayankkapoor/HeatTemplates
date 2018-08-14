@@ -113,8 +113,8 @@ resources:
         #!/bin/bash -v
         sudo hostnmae localhost
         sudo -i
-        export http_proxy=http://10.144.106.132:8678
-        export https_proxy=http://10.144.106.132:8678
+        export http_proxy=http://10.157.240.254:8678
+        export https_proxy=http://10.157.240.254:8678
         echo  > /etc/apt/sources.list
         echo "###### Ubuntu Main Repos" >> /etc/apt/sources.list
         echo "deb http://in.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse"  >> /etc/apt/sources.list
