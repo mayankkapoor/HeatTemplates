@@ -114,7 +114,7 @@ resources:
         echo "deb-src http://in.archive.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse"  >> /etc/apt/sources.list
         apt-get update -y
         apt-get install git -y
-        curl -sL https://deb.nodesource.com/setup_8.x | sudo -E bash -
+        curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
         apt-get install -y nodejs
         apt-get install -y build-essential
       
