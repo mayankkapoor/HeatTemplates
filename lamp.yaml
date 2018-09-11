@@ -101,9 +101,9 @@ resources:
   server:
     type: OS::Nova::Server
     properties:
+      availability_zone: { get_param: vmAvailabilityZone }
       key_name: { get_param: key }
       flavor: { get_param: flavor}
-      availability_zone: { get_param: vmAvailabilityZone }
       networks:
         - port: { get_resource: server_port }
       block_device_mapping_v2:
