@@ -144,7 +144,7 @@ resources:
     type: OS::Nova::FloatingIPAssociation
     properties:
       floating_ip: { get_resource: server_floating_ip}
-      server_id: { get_resource: lamp_server}
+      server_id: { get_resource: server}
 
   bootable_volume:
     type: OS::Cinder::Volume
@@ -159,4 +159,4 @@ resources:
 outputs:
   network:
     description: ip address of vm
-    value: { get_attr: [ lamp_server, networks ] }
+    value: { get_attr: [ server, networks ] }
