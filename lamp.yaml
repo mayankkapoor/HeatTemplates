@@ -22,6 +22,9 @@ parameters:
   availabilityZone:
     type: string
     default: nova
+  vmAvailabilityZone:
+    type: string
+    default: JMNG-PE3-NONPROD
 
   internalNet:
     type: string
@@ -100,7 +103,7 @@ resources:
     properties:
       key_name: { get_param: key }
       flavor: { get_param: flavor}
-      availability_zone: JMNG-PE3-NONPROD
+      availability_zone: { get_param: vmAvailabilityZone }
       networks:
         - port: { get_resource: server_port }
       block_device_mapping_v2:
