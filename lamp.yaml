@@ -95,11 +95,12 @@ resources:
         - { get_resource: security_group }
 
 
-  lamp_server:
+  server:
     type: OS::Nova::Server
     properties:
       key_name: { get_param: key }
       flavor: { get_param: flavor}
+      availability_zone: JMNG-PE3-NONPROD
       networks:
         - port: { get_resource: server_port }
       block_device_mapping_v2:
