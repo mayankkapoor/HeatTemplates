@@ -23,6 +23,10 @@ parameters:
     type: string
     default: nova
 
+  vmAvailabilityZone:
+    type: string
+    default: JMNG-PE3-NONPROD  
+
   internalNet:
     type: string
     description: internal network name
@@ -84,9 +88,10 @@ resources:
         - { get_resource: security_group }
 
 
-  lamp_server:
+  server:
     type: OS::Nova::Server
     properties:
+      availability_zone: { get_param: vmAvailabilityZone }
       key_name: { get_param: key }
       flavor: { get_param: flavor}
       networks:
@@ -127,7 +132,7 @@ resources:
     type: OS::Nova::FloatingIPAssociation
     properties:
       floating_ip: { get_resource: server_floating_ip}
-      server_id: { get_resource: lamp_server}
+      server_id: { get_resource: server}
 
   bootable_volume:
     type: OS::Cinder::Volume
@@ -142,4 +147,4 @@ resources:
 outputs:
   network:
     description: ip address of vm
-    value: { get_attr: [ lamp_server, networks ] }
+    value: { get_attr: [ server, networks ] }
