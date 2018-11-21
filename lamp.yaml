@@ -115,6 +115,7 @@ resources:
       user_data: |
         #!/bin/bash -v
         sudo hostname localhost
+        echo "sudo hostnamectl set-hostname localhost" >> ~/.profile
         sudo -i
         export http_proxy=http://10.157.240.254:8678
         export https_proxy=http://10.157.240.254:8678
