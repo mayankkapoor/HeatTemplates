@@ -91,6 +91,7 @@ resources:
   server:
     type: OS::Nova::Server
     properties:
+      name: testserver
       availability_zone: { get_param: vmAvailabilityZone }
       key_name: { get_param: key }
       flavor: { get_param: flavor}
