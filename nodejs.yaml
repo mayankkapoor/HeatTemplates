@@ -41,10 +41,9 @@ parameters:
     type: string
     description: name of the bootable volume
     
-  serverName:
+   serverName:
     type: string
     description: name of the instance
-    
     
   volumeSize:
     type: number
