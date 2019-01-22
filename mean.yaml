@@ -41,6 +41,11 @@ parameters:
   volumeName:
     type: string
     description: name of the bootable volume
+    
+  serverName:
+    type: string
+    description: name of the instance
+  
   volumeSize:
     type: number
     default: 10
@@ -103,6 +108,7 @@ resources:
   server:
     type: OS::Nova::Server
     properties:
+      name: { get_param: serverName }
       availability_zone: { get_param: vmAvailabilityZone }
       key_name: { get_param: key }
       flavor: { get_param: flavor}
