@@ -51,6 +51,9 @@ parameters:
   bootImage:
     type: string
     default: Ubuntu1604
+  proxy_ip:
+    type: string
+    default: 10.144.106.132:8678
 
 
 
@@ -107,27 +110,33 @@ resources:
           delete_on_termination: True
 
 
-      user_data: |
-        #!/bin/bash -v
-        sudo hostname localhost
-        echo "sudo hostnamectl set-hostname localhost" >> ~/.profile
-        sudo -i
-        export http_proxy=http://10.144.106.132:8678
-        export https_proxy=http://10.144.106.132:8678
-        echo  > /etc/apt/sources.list
-        echo "###### Ubuntu Main Repos" >> /etc/apt/sources.list
-        echo "deb http://in.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse"  >> /etc/apt/sources.list
-        echo "deb-src http://in.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse" >> /etc/apt/sources.list
-        echo "###### Ubuntu Update Repos" >> /etc/apt/sources.list
-        echo "deb http://in.archive.ubuntu.com/ubuntu/ xenial-security main restricted universe multiverse" >> /etc/apt/sources.list
-        echo "deb http://in.archive.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse" >> /etc/apt/sources.list
-        echo "deb-src http://in.archive.ubuntu.com/ubuntu/ xenial-security main restricted universe multiverse" >> /etc/apt/sources.list
-        echo "deb-src http://in.archive.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse"  >> /etc/apt/sources.list
-        apt-get update -y
-        apt-get install git -y
-        curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
-        apt-get install -y nodejs
-        apt-get install -y build-essential
+      user_data:
+        str_replace:
+          template: |
+            #!/bin/bash -v
+            sudo hostname localhost
+            echo "sudo hostnamectl set-hostname localhost" >> ~/.profile
+            sudo -i
+            export http_proxy=$proxy
+            export https_proxy=$proxy
+            echo "export http_proxy=$proxy" >> /etc/profile.d/proxy.sh
+            echo "export https_proxy=$proxy" >> /etc/profile.d/proxy.sh
+            echo  > /etc/apt/sources.list
+            echo "###### Ubuntu Main Repos" >> /etc/apt/sources.list
+            echo "deb http://in.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse"  >> /etc/apt/sources.list
+            echo "deb-src http://in.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse" >> /etc/apt/sources.list
+            echo "###### Ubuntu Update Repos" >> /etc/apt/sources.list
+            echo "deb http://in.archive.ubuntu.com/ubuntu/ xenial-security main restricted universe multiverse" >> /etc/apt/sources.list
+            echo "deb http://in.archive.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse" >> /etc/apt/sources.list
+            echo "deb-src http://in.archive.ubuntu.com/ubuntu/ xenial-security main restricted universe multiverse" >> /etc/apt/sources.list
+            echo "deb-src http://in.archive.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse"  >> /etc/apt/sources.list
+            apt-get update -y
+            apt-get install git -y
+            curl -sL https://deb.nodesource.com/setup_10.x | sudo -E bash -
+            apt-get install -y nodejs
+            apt-get install -y build-essential
+          params:
+            $proxy: { get_param: proxy_ip }
       
 
   server_floating_ip:
