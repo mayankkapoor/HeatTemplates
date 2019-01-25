@@ -51,6 +51,9 @@ parameters:
   bootImage:
     type: string
     default: Ubuntu1604
+  proxyIp:
+    type: string
+    default: 10.144.106.132:8678  
 
 
 
@@ -108,26 +111,30 @@ resources:
           delete_on_termination: True
 
 
-      user_data: |
-        #!/bin/bash -v
-        sudo hostname localhost
-        echo "sudo hostnamectl set-hostname localhost" >> ~/.profile
-        sudo -i
-        export http_proxy=http://10.157.240.254:8678
-        export https_proxy=http://10.157.240.254:8678
-        echo  > /etc/apt/sources.list
-        cat >/etc/apt/sources.list <<EOL
-        ###### Ubuntu Main Repos
-        deb http://in.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse 
-        deb-src http://in.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse 
+      user_data:
+        str_replace:
+          template: |
+            #!/bin/bash -v
+            sudo hostname localhost
+            echo "sudo hostnamectl set-hostname localhost" >> ~/.profile
+            sudo -i
+            export http_proxy=$proxy
+            export https_proxy=$proxy
+            echo  > /etc/apt/sources.list
+            cat >/etc/apt/sources.list <<EOL
+            ###### Ubuntu Main Repos
+            deb http://in.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse 
+            deb-src http://in.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse 
 
-        ###### Ubuntu Update Repos
-        deb http://in.archive.ubuntu.com/ubuntu/ xenial-security main restricted universe multiverse 
-        deb http://in.archive.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse 
-        deb-src http://in.archive.ubuntu.com/ubuntu/ xenial-security main restricted universe multiverse 
-        deb-src http://in.archive.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse  
-        EOL
-        apt-get update -y
+            ###### Ubuntu Update Repos
+            deb http://in.archive.ubuntu.com/ubuntu/ xenial-security main restricted universe multiverse 
+            deb http://in.archive.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse 
+            deb-src http://in.archive.ubuntu.com/ubuntu/ xenial-security main restricted universe multiverse 
+            deb-src http://in.archive.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse  
+            EOL
+            apt-get update -y
+          params:
+            $proxy: { get_param: proxyIp }
 
 
   server_floating_ip:
