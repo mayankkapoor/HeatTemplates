@@ -51,7 +51,7 @@ parameters:
   bootImage:
     type: string
     default: Ubuntu1604
-  proxyIp:
+  proxy_ip:
     type: string
     default: 10.144.106.132:8678  
 
@@ -134,7 +134,7 @@ resources:
             EOL
             apt-get update -y
           params:
-            $proxy: { get_param: proxyIp }
+            $proxy: { get_param: proxy_ip }
 
 
   server_floating_ip:
