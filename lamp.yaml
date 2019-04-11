@@ -53,7 +53,9 @@ parameters:
   proxy_ip:
     type: string
     default: http://10.144.106.132:8678
-
+  istelegrafon:
+    type: string
+    default: restart
 
 
 
