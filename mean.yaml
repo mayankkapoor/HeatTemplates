@@ -162,8 +162,18 @@ resources:
             npm install -g gulp
             npm install -g mean-cli
             npm install -g yarn
+            apt-get update -y
+            wget https://dl.influxdata.com/telegraf/releases/telegraf_1.10.0-1_amd64.deb
+            dpkg -i telegraf_1.10.0-1_amd64.deb
+            apt-get install jq -y
+            echo "serverid=$(sudo curl GET  -s 'http://169.254.169.254/openstack/latest/meta_data.json' |jq -r '.uuid' )" >> /etc/default/telegraf
+            mv /etc/telegraf/telegraf.conf /etc/telegraf/telegraf-orig.conf
+            wget -O /etc/telegraf/telegraf.conf https://raw.githubusercontent.com/Rahul-Aanand/statuscheck/test-kafka-cluster/telegraf.conf
+            wget -O /etc/telegraf/longrunning.sh https://raw.githubusercontent.com/Rahul-Aanand/statuscheck/test-kafka-cluster/longrunning.sh
+            service telegraf $istelegrafon
           params:
             $proxy: { get_param: proxy_ip }
+            $istelegrafon : { get_param: istelegrafon }
 
 
 
