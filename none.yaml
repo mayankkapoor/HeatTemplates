@@ -174,6 +174,12 @@ resources:
               wget -O jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
               chmod +x ./jq
               mv jq /usr/bin
+            else
+              echo "Unknown image, assuming debian OS"
+              wget https://dl.influxdata.com/telegraf/releases/telegraf_1.10.0-1_amd64.deb
+              dpkg -i telegraf_1.10.0-1_amd64.deb
+              apt-get install jq -y
+            fi
             # Telegraf agent config
             echo "serverid=$(sudo curl GET  -s 'http://169.254.169.254/openstack/latest/meta_data.json' |jq -r '.uuid' )" >> /etc/default/telegraf
             mv /etc/telegraf/telegraf.conf /etc/telegraf/telegraf-orig.conf
