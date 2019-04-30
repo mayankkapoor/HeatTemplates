@@ -121,7 +121,7 @@ resources:
             echo "export https_proxy=$proxy" >> /etc/profile.d/proxy.sh
 
             ###### Update image repositories to official ones
-            if [ $bootImage == 'Ubuntu1604']
+            if [ $bootImage == 'Ubuntu1604' ]
             then
               echo  > /etc/apt/sources.list
               cat >/etc/apt/sources.list <<EOL
@@ -135,7 +135,7 @@ resources:
               deb-src http://in.archive.ubuntu.com/ubuntu/ xenial-security main restricted universe multiverse
               deb-src http://in.archive.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse
               EOL
-            elif [ $bootImage == 'Ubuntu1804']
+            elif [ $bootImage == 'Ubuntu1804' ]
             then
               echo  > /etc/apt/sources.list
               cat >/etc/apt/sources.list <<EOL
@@ -154,9 +154,35 @@ resources:
             fi
 
             ###### Telegraf monitoring agent install
-            wget https://dl.influxdata.com/telegraf/releases/telegraf_1.10.0-1_amd64.deb
-            dpkg -i telegraf_1.10.0-1_amd64.deb
-            apt-get install jq -y
+            if [ $bootImage == 'Ubuntu1604' ] || [ $bootImage == 'Ubuntu1804' ]
+            then
+              wget https://dl.influxdata.com/telegraf/releases/telegraf_1.10.0-1_amd64.deb
+              dpkg -i telegraf_1.10.0-1_amd64.deb
+              rm telegraf_1.10.0-1_amd64.deb
+              apt-get install jq -y
+            elif [ $bootImage == 'Centos-7.5' ]
+            then
+              yum install wget -y
+              wget https://dl.influxdata.com/telegraf/releases/telegraf-1.10.3-1.x86_64.rpm
+              yum localinstall telegraf-1.10.3-1.x86_64.rpm -y
+              rm telegraf-1.10.3-1.x86_64.rpm
+              yum install jq -y
+            elif [ $bootImage == 'RHEL-7.5' ]
+            then
+              wget https://dl.influxdata.com/telegraf/releases/telegraf-1.10.3-1.x86_64.rpm
+              yum localinstall telegraf-1.10.3-1.x86_64.rpm -y
+              rm telegraf-1.10.3-1.x86_64.rpm
+              wget -O jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
+              chmod +x ./jq
+              mv jq /usr/bin
+            else
+              echo "New OS image encountered, telegraf installation will likely not work, assuming Debian OS"
+              wget https://dl.influxdata.com/telegraf/releases/telegraf_1.10.0-1_amd64.deb
+              dpkg -i telegraf_1.10.0-1_amd64.deb
+              rm telegraf_1.10.0-1_amd64.deb
+              apt-get install jq -y
+            fi
+            # Telegraf agent configuration
             echo "serverid=$(sudo curl GET  -s 'http://169.254.169.254/openstack/latest/meta_data.json' |jq -r '.uuid' )" >> /etc/default/telegraf
             mv /etc/telegraf/telegraf.conf /etc/telegraf/telegraf-orig.conf
             wget -O /etc/telegraf/telegraf.conf https://raw.githubusercontent.com/Rahul-Aanand/statuscheck/prod/telegraf.conf
