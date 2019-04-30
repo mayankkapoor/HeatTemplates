@@ -151,7 +151,12 @@ resources:
             fi
 
             # Telegraf agent install
-            if [ $bootImage = "Ubuntu1604" ] || [ $bootImage = "Ubuntu1804" ]
+            if [ $bootImage = "Ubuntu1604" ]
+            then
+              wget https://dl.influxdata.com/telegraf/releases/telegraf_1.10.0-1_amd64.deb
+              dpkg -i telegraf_1.10.0-1_amd64.deb
+              apt-get install jq -y
+            elif [ $bootImage = "Ubuntu1804" ]
             then
               wget https://dl.influxdata.com/telegraf/releases/telegraf_1.10.0-1_amd64.deb
               dpkg -i telegraf_1.10.0-1_amd64.deb
