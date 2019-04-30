@@ -151,9 +151,25 @@ resources:
             fi
 
             # Telegraf agent install
-            wget https://dl.influxdata.com/telegraf/releases/telegraf_1.10.0-1_amd64.deb
-            dpkg -i telegraf_1.10.0-1_amd64.deb
-            apt-get install jq -y
+            if [ $bootImage = "Ubuntu1604" ] || [ $bootImage = "Ubuntu1804" ]
+            then
+              wget https://dl.influxdata.com/telegraf/releases/telegraf_1.10.0-1_amd64.deb
+              dpkg -i telegraf_1.10.0-1_amd64.deb
+              apt-get install jq -y
+            elif [ $bootImage = "Centos-7.5" ]
+            then
+              yum install wget -y
+              wget https://dl.influxdata.com/telegraf/releases/telegraf-1.10.3-1.x86_64.rpm
+              yum localinstall telegraf-1.10.3-1.x86_64.rpm -y
+              yum install jq -y
+            elif [ $bootImage = "RHEL-7.5" ]
+            then
+              wget https://dl.influxdata.com/telegraf/releases/telegraf-1.10.3-1.x86_64.rpm
+              yum localinstall telegraf-1.10.3-1.x86_64.rpm -y
+              wget -O jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
+              chmod +x ./jq
+              mv jq /usr/bin
+            # Telegraf agent config
             echo "serverid=$(sudo curl GET  -s 'http://169.254.169.254/openstack/latest/meta_data.json' |jq -r '.uuid' )" >> /etc/default/telegraf
             mv /etc/telegraf/telegraf.conf /etc/telegraf/telegraf-orig.conf
             wget -O /etc/telegraf/telegraf.conf https://raw.githubusercontent.com/Rahul-Aanand/statuscheck/prod/telegraf.conf
