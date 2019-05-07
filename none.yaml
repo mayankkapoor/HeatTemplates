@@ -202,7 +202,7 @@ resources:
             $proxy: { get_param: proxy_ip }
             $istelegrafon : { get_param: istelegrafon }
             $bootImage: { get_param: bootImage }
-            $isprodvm: { get_param:isprodvm }
+            $isprodvm: { get_param: isprodvm }
 
 
   server_floating_ip:
