@@ -41,6 +41,11 @@ parameters:
   volumeName:
     type: string
     description: name of the bootable volume
+
+  serverName:
+    type: string
+    description: name of the instance  
+
   volumeSize:
     type: number
     default: 10
@@ -49,7 +54,14 @@ parameters:
     default: Ubuntu1604
   proxy_ip:
     type: string
-    default: http://10.144.106.132:8678
+    default: http://10.157.240.254:8678
+  istelegrafon:
+    type: string
+    default: restart
+  isprodvm:
+    type: string
+    default: non-prod   
+  
 
 
 
@@ -116,35 +128,74 @@ resources:
             export https_proxy=$proxy
             echo "export http_proxy=$proxy" >> /etc/profile.d/proxy.sh
             echo "export https_proxy=$proxy" >> /etc/profile.d/proxy.sh
-            echo  > /etc/apt/sources.list
-            echo "###### Ubuntu Main Repos" >> /etc/apt/sources.list
-            echo "deb http://in.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse"  >> /etc/apt/sources.list
-            echo "deb-src http://in.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse" >> /etc/apt/sources.list
-            echo "###### Ubuntu Update Repos" >> /etc/apt/sources.list
-            echo "deb http://in.archive.ubuntu.com/ubuntu/ xenial-security main restricted universe multiverse" >> /etc/apt/sources.list
-            echo "deb http://in.archive.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse" >> /etc/apt/sources.list
-            echo "deb-src http://in.archive.ubuntu.com/ubuntu/ xenial-security main restricted universe multiverse" >> /etc/apt/sources.list
-            echo "deb-src http://in.archive.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse"  >> /etc/apt/sources.list
-            echo "deb http://nginx.org/packages/mainline/ubuntu/ xenial nginx" >> /etc/apt/sources.list
-            echo "deb-src http://nginx.org/packages/mainline/ubuntu/ xenial nginx" >> /etc/apt/sources.list
+
+            ##### Update sources.list based on bootImage
+            if [ $bootImage = "Ubuntu1604" ]
+            then
+              echo  > /etc/apt/sources.list
+              echo "###### Ubuntu Main Repos" >> /etc/apt/sources.list
+              echo "deb http://in.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse"  >> /etc/apt/sources.list
+              echo "deb-src http://in.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse" >> /etc/apt/sources.list
+              echo "###### Ubuntu Update Repos" >> /etc/apt/sources.list
+              echo "deb http://in.archive.ubuntu.com/ubuntu/ xenial-security main restricted universe multiverse" >> /etc/apt/sources.list
+              echo "deb http://in.archive.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse" >> /etc/apt/sources.list
+              echo "deb-src http://in.archive.ubuntu.com/ubuntu/ xenial-security main restricted universe multiverse" >> /etc/apt/sources.list
+              echo "deb-src http://in.archive.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse"  >> /etc/apt/sources.list
+            elif [ $bootImage = "Ubuntu1804" ]
+            then
+              echo  > /etc/apt/sources.list
+              echo "###### Ubuntu Main Repos" >> /etc/apt/sources.list
+              echo "deb http://in.archive.ubuntu.com/ubuntu/ bionic main restricted universe multiverse"  >> /etc/apt/sources.list
+              echo "deb-src http://in.archive.ubuntu.com/ubuntu/ bionic main restricted universe multiverse" >> /etc/apt/sources.list
+              echo "###### Ubuntu Update Repos" >> /etc/apt/sources.list
+              echo "deb http://in.archive.ubuntu.com/ubuntu/ bionic-security main restricted universe multiverse" >> /etc/apt/sources.list
+              echo "deb http://in.archive.ubuntu.com/ubuntu/ bionic-updates main restricted universe multiverse" >> /etc/apt/sources.list
+              echo "deb-src http://in.archive.ubuntu.com/ubuntu/ bionic-security main restricted universe multiverse" >> /etc/apt/sources.list
+              echo "deb-src http://in.archive.ubuntu.com/ubuntu/ bionic-updates main restricted universe multiverse"  >> /etc/apt/sources.list
+            else
+              echo "sources.list was not updated based on bootImage"
+            fi
+
+            ##### Telegraf agent and snoopy install
+            curl -L -O https://dl.influxdata.com/telegraf/releases/telegraf_1.10.3-1_amd64.deb
+            dpkg -i telegraf_1.10.3-1_amd64.deb
+            apt-get update -y
+            apt-get install libtool-bin -y
+            apt-get install jq -y
+            rm -f snoopy-install.sh
+            curl -L -o snoopy-install.sh https://github.com/a2o/snoopy/raw/install/doc/install/bin/snoopy-install.sh
+            chmod 755 snoopy-install.sh
+            ./snoopy-install.sh git-master
+            chmod -R 777 /var/log/auth.log
+            snoopy-enable
+
+            ##### Telegraf configurations download
+            echo "serverid=$(sudo curl GET  -s 'http://169.254.169.254/openstack/latest/meta_data.json' |jq -r '.uuid' )" >> /etc/default/telegraf
+            mv /etc/telegraf/telegraf.conf /etc/telegraf/telegraf-orig.conf
+            if [ $isprodvm = "non-prod" ] 
+            then
+              curl -o /etc/telegraf/telegraf.conf https://raw.githubusercontent.com/mayankkapoor/statuscheck/test/telegraf_nonprod.conf
+            else
+              curl -o /etc/telegraf/telegraf.conf https://raw.githubusercontent.com/mayankkapoor/statuscheck/test/telegraf_prod.conf
+            fi
+            curl -o /etc/telegraf/longrunning.sh https://raw.githubusercontent.com/mayankkapoor/statuscheck/test/longrunning.sh
+            curl -o /etc/telegraf/commands.sh https://raw.githubusercontent.com/mayankkapoor/statuscheck/test/commands.sh
+
+            service telegraf $istelegrafon
+
+            ##### stack installtion 
             wget http://nginx.org/keys/nginx_signing.key
             apt-key add nginx_signing.key
             apt-get update -y
             apt-get install git -y
             apt-get install nginx -y
             systemctl start nginx
-            apt-get update -y
-            wget https://dl.influxdata.com/telegraf/releases/telegraf_1.10.0-1_amd64.deb
-            dpkg -i telegraf_1.10.0-1_amd64.deb
-            apt-get install jq -y
-            echo "serverid=$(sudo curl GET  -s 'http://169.254.169.254/openstack/latest/meta_data.json' |jq -r '.uuid' )" >> /etc/default/telegraf
-            mv /etc/telegraf/telegraf.conf /etc/telegraf/telegraf-orig.conf
-            wget -O /etc/telegraf/telegraf.conf https://raw.githubusercontent.com/Rahul-Aanand/statuscheck/prod/telegraf.conf
-            wget -O /etc/telegraf/longrunning.sh https://raw.githubusercontent.com/Rahul-Aanand/statuscheck/prod/longrunning.sh
-            service telegraf $istelegrafon
+
           params:
             $proxy: { get_param: proxy_ip }
             $istelegrafon : { get_param: istelegrafon }
+            $bootImage: { get_param: bootImage }
+            $isprodvm: { get_param: isprodvm }
         
       
 
