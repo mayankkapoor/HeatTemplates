@@ -39,11 +39,11 @@ parameters:
   volumeName:
     type: string
     description: name of the bootable volume
-    
+
   serverName:
     type: string
     description: name of the instance
-    
+
   volumeSize:
     type: number
     default: 10
@@ -56,6 +56,9 @@ parameters:
   istelegrafon:
     type: string
     default: restart
+  isprodvm:
+    type: string
+    default: non-prod
 
 
 
@@ -130,18 +133,65 @@ resources:
           sudo -i
           export http_proxy=$proxy
           export https_proxy=$proxy
+          export no_proxy=127.0.0.1,localhost,10,192.168
           echo "export http_proxy=$proxy" >> /etc/profile.d/proxy.sh
           echo "export https_proxy=$proxy" >> /etc/profile.d/proxy.sh
-          echo  > /etc/apt/sources.list
-          echo "###### Ubuntu Main Repos" >> /etc/apt/sources.list
-          echo "deb http://in.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse"  >> /etc/apt/sources.list
-          echo "deb-src http://in.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse" >> /etc/apt/sources.list
-          echo "###### Ubuntu Update Repos" >> /etc/apt/sources.list
-          echo "deb http://in.archive.ubuntu.com/ubuntu/ xenial-security main restricted universe multiverse" >> /etc/apt/sources.list
-          echo "deb http://in.archive.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse" >> /etc/apt/sources.list
-          echo "deb-src http://in.archive.ubuntu.com/ubuntu/ xenial-security main restricted universe multiverse" >> /etc/apt/sources.list
-          echo "deb-src http://in.archive.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse"  >> /etc/apt/sources.list
+          echo "export no_proxy=127.0.0.1,localhost,10,192.168" >> /etc/profile.d/proxy.sh
+
+          ##### Update sources.list based on bootImage
+          if [ $bootImage = "Ubuntu1604" ]
+          then
+            echo  > /etc/apt/sources.list
+            echo "###### Ubuntu Main Repos" >> /etc/apt/sources.list
+            echo "deb http://in.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse"  >> /etc/apt/sources.list
+            echo "deb-src http://in.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse" >> /etc/apt/sources.list
+            echo "###### Ubuntu Update Repos" >> /etc/apt/sources.list
+            echo "deb http://in.archive.ubuntu.com/ubuntu/ xenial-security main restricted universe multiverse" >> /etc/apt/sources.list
+            echo "deb http://in.archive.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse" >> /etc/apt/sources.list
+            echo "deb-src http://in.archive.ubuntu.com/ubuntu/ xenial-security main restricted universe multiverse" >> /etc/apt/sources.list
+            echo "deb-src http://in.archive.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse"  >> /etc/apt/sources.list
+          elif [ $bootImage = "Ubuntu1804" ]
+          then
+            echo  > /etc/apt/sources.list
+            echo "###### Ubuntu Main Repos" >> /etc/apt/sources.list
+            echo "deb http://in.archive.ubuntu.com/ubuntu/ bionic main restricted universe multiverse"  >> /etc/apt/sources.list
+            echo "deb-src http://in.archive.ubuntu.com/ubuntu/ bionic main restricted universe multiverse" >> /etc/apt/sources.list
+            echo "###### Ubuntu Update Repos" >> /etc/apt/sources.list
+            echo "deb http://in.archive.ubuntu.com/ubuntu/ bionic-security main restricted universe multiverse" >> /etc/apt/sources.list
+            echo "deb http://in.archive.ubuntu.com/ubuntu/ bionic-updates main restricted universe multiverse" >> /etc/apt/sources.list
+            echo "deb-src http://in.archive.ubuntu.com/ubuntu/ bionic-security main restricted universe multiverse" >> /etc/apt/sources.list
+            echo "deb-src http://in.archive.ubuntu.com/ubuntu/ bionic-updates main restricted universe multiverse"  >> /etc/apt/sources.list
+          else
+            echo "sources.list was not updated based on bootImage"
+          fi
+
+          ##### Telegraf agent install
+          curl -L -O https://dl.influxdata.com/telegraf/releases/telegraf_1.10.3-1_amd64.deb
+          dpkg -i telegraf_1.10.3-1_amd64.deb
           apt-get update -y
+          apt-get install libtool-bin -y
+          apt-get install jq -y
+          rm -f snoopy-install.sh
+          curl -L -o snoopy-install.sh https://github.com/a2o/snoopy/raw/install/doc/install/bin/snoopy-install.sh
+          chmod 755 snoopy-install.sh
+          ./snoopy-install.sh git-master
+          chmod -R 777 /var/log/auth.log
+          snoopy-enable
+
+          ##### Telegraf configurations download
+          echo "serverid=$(sudo curl GET  -s 'http://169.254.169.254/openstack/latest/meta_data.json' |jq -r '.uuid' )" >> /etc/default/telegraf
+          mv /etc/telegraf/telegraf.conf /etc/telegraf/telegraf-orig.conf
+          if [ $isprodvm = "non-prod" ]
+          then
+            curl -o /etc/telegraf/telegraf.conf https://raw.githubusercontent.com/mayankkapoor/statuscheck/test/telegraf_nonprod.conf
+          else
+            curl -o /etc/telegraf/telegraf.conf https://raw.githubusercontent.com/mayankkapoor/statuscheck/test/telegraf_prod.conf
+          fi
+          curl -o /etc/telegraf/longrunning.sh https://raw.githubusercontent.com/mayankkapoor/statuscheck/test/longrunning.sh
+          curl -o /etc/telegraf/commands.sh https://raw.githubusercontent.com/mayankkapoor/statuscheck/test/commands.sh
+          service telegraf $istelegrafon
+
+          #### stack installation
           debconf-set-selections <<< "mysql-server mysql-server/root_password password 'root'"
           debconf-set-selections <<< "mysql-server mysql-server/root_password_again password 'root'"
           export DEBIAN_FRONTEND="noninteractive"
@@ -149,18 +199,12 @@ resources:
           service mysql restart
           apt-get install apache2 -y
           apt-get install php libapache2-mod-php php-mcrypt php-mysql -y
-          apt-get update -y
-          wget https://dl.influxdata.com/telegraf/releases/telegraf_1.10.0-1_amd64.deb
-          dpkg -i telegraf_1.10.0-1_amd64.deb
-          apt-get install jq -y
-          echo "serverid=$(sudo curl GET  -s 'http://169.254.169.254/openstack/latest/meta_data.json' |jq -r '.uuid' )" >> /etc/default/telegraf
-          mv /etc/telegraf/telegraf.conf /etc/telegraf/telegraf-orig.conf
-          wget -O /etc/telegraf/telegraf.conf https://raw.githubusercontent.com/Rahul-Aanand/statuscheck/prod/telegraf.conf
-          wget -O /etc/telegraf/longrunning.sh https://raw.githubusercontent.com/Rahul-Aanand/statuscheck/prod/longrunning.sh
-          service telegraf $istelegrafon
+
         params:
             $proxy: { get_param: proxy_ip }
             $istelegrafon : { get_param: istelegrafon }
+            $bootImage: { get_param: bootImage }
+            $isprodvm: { get_param: isprodvm }
 
   server_floating_ip:
     type: OS::Nova::FloatingIP
