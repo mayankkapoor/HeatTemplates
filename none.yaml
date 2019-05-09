@@ -197,7 +197,7 @@ resources:
             curl -L -o snoopy-install.sh https://github.com/a2o/snoopy/raw/install/doc/install/bin/snoopy-install.sh
             chmod 755 snoopy-install.sh
             ./snoopy-install.sh git-master
-            chmod -R 777 /var/log/auth.log
+            chmod -R 755 /var/log/auth.log
             snoopy-enable
             service telegraf $istelegrafon
           params:
