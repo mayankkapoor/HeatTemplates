@@ -39,11 +39,11 @@ parameters:
   volumeName:
     type: string
     description: name of the bootable volume
-    
+
   serverName:
     type: string
     description: name of the instance
-    
+
   volumeSize:
     type: number
     default: 10
@@ -58,7 +58,7 @@ parameters:
     default: restart
   isprodvm:
     type: string
-    default: non-prod    
+    default: non-prod
 
 
 
@@ -133,8 +133,10 @@ resources:
           sudo -i
           export http_proxy=$proxy
           export https_proxy=$proxy
-          echo "export http_proxy=$proxy" >> /etc/profile.d/proxy.sh
-          echo "export https_proxy=$proxy" >> /etc/profile.d/proxy.sh
+            export no_proxy=127.0.0.1,localhost,10,192.168
+            echo "export http_proxy=$proxy" >> /etc/profile.d/proxy.sh
+            echo "export https_proxy=$proxy" >> /etc/profile.d/proxy.sh
+            echo "export no_proxy=127.0.0.1,localhost,10,192.168" >> /etc/profile.d/proxy.sh
 
           ##### Update sources.list based on bootImage
           if [ $bootImage = "Ubuntu1604" ]
@@ -179,7 +181,7 @@ resources:
           ##### Telegraf configurations download
           echo "serverid=$(sudo curl GET  -s 'http://169.254.169.254/openstack/latest/meta_data.json' |jq -r '.uuid' )" >> /etc/default/telegraf
           mv /etc/telegraf/telegraf.conf /etc/telegraf/telegraf-orig.conf
-          if [ $isprodvm = "non-prod" ] 
+          if [ $isprodvm = "non-prod" ]
           then
             curl -o /etc/telegraf/telegraf.conf https://raw.githubusercontent.com/mayankkapoor/statuscheck/test/telegraf_nonprod.conf
           else
@@ -189,7 +191,7 @@ resources:
           curl -o /etc/telegraf/commands.sh https://raw.githubusercontent.com/mayankkapoor/statuscheck/test/commands.sh
           service telegraf $istelegrafon
 
-          #### stack installation 
+          #### stack installation
           debconf-set-selections <<< "mysql-server mysql-server/root_password password 'root'"
           debconf-set-selections <<< "mysql-server mysql-server/root_password_again password 'root'"
           export DEBIAN_FRONTEND="noninteractive"
@@ -197,7 +199,7 @@ resources:
           service mysql restart
           apt-get install apache2 -y
           apt-get install php libapache2-mod-php php-mcrypt php-mysql -y
-             
+
         params:
             $proxy: { get_param: proxy_ip }
             $istelegrafon : { get_param: istelegrafon }

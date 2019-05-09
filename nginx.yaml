@@ -1,6 +1,6 @@
 heat_template_version: 2013-05-23
 description: >
-  creating nodejs stack 
+  creating nodejs stack
 
 parameters:
   key:
@@ -26,7 +26,7 @@ parameters:
 
   vmAvailabilityZone:
     type: string
-    default: JMNG-PE3-NONPROD  
+    default: JMNG-PE3-NONPROD
 
   internalNet:
     type: string
@@ -44,7 +44,7 @@ parameters:
 
   serverName:
     type: string
-    description: name of the instance  
+    description: name of the instance
 
   volumeSize:
     type: number
@@ -60,8 +60,8 @@ parameters:
     default: restart
   isprodvm:
     type: string
-    default: non-prod   
-  
+    default: non-prod
+
 
 
 
@@ -72,7 +72,7 @@ resources:
     type: OS::Neutron::SecurityGroup
     properties:
       name: { get_param: securityGroup }
-      rules: [ 
+      rules: [
              {"direction": ingress,
               "remote_ip_prefix": 0.0.0.0/0,
               "port_range_min": 22,
@@ -90,7 +90,7 @@ resources:
               "port_range_min": 443,
               "port_range_max": 443,
               "ethertype": IPv4,
-              "protocol": tcp}  
+              "protocol": tcp}
             ]
 
   server_port:
@@ -126,8 +126,10 @@ resources:
             sudo -i
             export http_proxy=$proxy
             export https_proxy=$proxy
+            export no_proxy=127.0.0.1,localhost,10,192.168
             echo "export http_proxy=$proxy" >> /etc/profile.d/proxy.sh
             echo "export https_proxy=$proxy" >> /etc/profile.d/proxy.sh
+            echo "export no_proxy=127.0.0.1,localhost,10,192.168" >> /etc/profile.d/proxy.sh
 
             ##### Update sources.list based on bootImage
             if [ $bootImage = "Ubuntu1604" ]
@@ -172,7 +174,7 @@ resources:
             ##### Telegraf configurations download
             echo "serverid=$(sudo curl GET  -s 'http://169.254.169.254/openstack/latest/meta_data.json' |jq -r '.uuid' )" >> /etc/default/telegraf
             mv /etc/telegraf/telegraf.conf /etc/telegraf/telegraf-orig.conf
-            if [ $isprodvm = "non-prod" ] 
+            if [ $isprodvm = "non-prod" ]
             then
               curl -o /etc/telegraf/telegraf.conf https://raw.githubusercontent.com/mayankkapoor/statuscheck/test/telegraf_nonprod.conf
             else
@@ -183,7 +185,7 @@ resources:
 
             service telegraf $istelegrafon
 
-            ##### stack installtion 
+            ##### stack installtion
             wget http://nginx.org/keys/nginx_signing.key
             apt-key add nginx_signing.key
             apt-get update -y
@@ -196,8 +198,8 @@ resources:
             $istelegrafon : { get_param: istelegrafon }
             $bootImage: { get_param: bootImage }
             $isprodvm: { get_param: isprodvm }
-        
-      
+
+
 
   server_floating_ip:
     type: OS::Nova::FloatingIP
