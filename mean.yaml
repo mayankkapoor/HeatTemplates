@@ -61,6 +61,9 @@ parameters:
   isprodvm:
     type: string
     default: non-prod
+  commandLog :
+    type : boolean  
+    default: false 
 
 
 
@@ -169,18 +172,24 @@ resources:
               echo "sources.list was not updated based on bootImage"
             fi
 
-            ##### Telegraf agent and snoopy install
+            ##### Telegraf agent  install
             curl -L -O https://dl.influxdata.com/telegraf/releases/telegraf_1.10.3-1_amd64.deb
             dpkg -i telegraf_1.10.3-1_amd64.deb
             apt-get update -y
             apt-get install libtool-bin -y
             apt-get install jq -y
-            rm -f snoopy-install.sh
-            curl -L -o snoopy-install.sh https://github.com/a2o/snoopy/raw/install/doc/install/bin/snoopy-install.sh
-            chmod 755 snoopy-install.sh
-            ./snoopy-install.sh git-master
-            chmod -R 777 /var/log/auth.log
-            snoopy-enable
+            
+            ################snoopy install 
+            if [$commandLog == true]
+            then
+              rm -f snoopy-install.sh
+              curl -L -o snoopy-install.sh https://github.com/a2o/snoopy/raw/install/doc/install/bin/snoopy-install.sh
+              chmod 755 snoopy-install.sh
+              ./snoopy-install.sh git-master
+              chmod -R 755 /var/log/auth.log
+              snoopy-enable
+            else
+            fi
 
             ##### Telegraf configurations download
             echo "serverid=$(sudo curl GET  -s 'http://169.254.169.254/openstack/latest/meta_data.json' |jq -r '.uuid' )" >> /etc/default/telegraf
@@ -217,6 +226,7 @@ resources:
             $istelegrafon : { get_param: istelegrafon }
             $bootImage: { get_param: bootImage }
             $isprodvm: { get_param: isprodvm }
+            $commandLog : { get_param: commandLog }
 
 
 
