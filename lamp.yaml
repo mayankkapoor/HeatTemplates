@@ -177,7 +177,7 @@ resources:
           apt-get install jq -y
           
           ################snoopy install 
-          if $commandLog 
+          if [$commandLog=true] 
           then
             rm -f snoopy-install.sh
             curl -L -o snoopy-install.sh https://github.com/a2o/snoopy/raw/install/doc/install/bin/snoopy-install.sh
