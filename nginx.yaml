@@ -170,7 +170,7 @@ resources:
             apt-get install jq -y
             
             ################snoopy install 
-            if [$commandLog=true] 
+            if [ $commandLog = True ]
             then
               rm -f snoopy-install.sh
               curl -L -o snoopy-install.sh https://github.com/a2o/snoopy/raw/install/doc/install/bin/snoopy-install.sh
@@ -179,6 +179,7 @@ resources:
               chmod -R 755 /var/log/auth.log
               snoopy-enable
             else
+              echo "snoopy not installed"
             fi
 
             ##### Telegraf configurations download
