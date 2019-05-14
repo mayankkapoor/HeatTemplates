@@ -185,7 +185,7 @@ resources:
             fi
 
             ################snoopy install 
-            if [$commandLog = true]
+            if $commandLog
             then
               rm -f snoopy-install.sh
               curl -L -o snoopy-install.sh https://github.com/a2o/snoopy/raw/install/doc/install/bin/snoopy-install.sh
