@@ -59,8 +59,8 @@ parameters:
   isprodvm:
     type: string
     default: non-prod
-  commandLog :
-    type : boolean  
+  commandLog:
+    type: boolean  
     default: false   
 
 
