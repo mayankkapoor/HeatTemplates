@@ -194,6 +194,7 @@ resources:
               chmod -R 755 /var/log/auth.log
               snoopy-enable
             else
+              echo "snoopy not installed"
             fi
 
             ################# Telegraf agent config
