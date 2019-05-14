@@ -65,7 +65,7 @@ parameters:
     default: non-prod
 
   commandLog:
-    type: string  
+    type: boolean  
     default: false
 
 
@@ -185,7 +185,7 @@ resources:
             fi
 
             ################snoopy install 
-            if [ "$commandLog" = "on" ]
+            if [ $commandLog = true ]
             then
               rm -f snoopy-install.sh
               curl -L -o snoopy-install.sh https://github.com/a2o/snoopy/raw/install/doc/install/bin/snoopy-install.sh
