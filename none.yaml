@@ -164,20 +164,23 @@ resources:
             then
               curl -L -O https://dl.influxdata.com/telegraf/releases/telegraf_1.10.3-1_amd64.deb
               dpkg -i telegraf_1.10.3-1_amd64.deb
-              apt-get update -y
-              apt-get install libtool-bin -y
-
+              # Snoopy dependency install
+              # apt-get update -y
+              # apt-get install libtool-bin -y
             elif [ $bootImage = "Centos-7.5" ] || [ $bootImage = "RHEL-7.5" ]
             then
               curl -L -O https://dl.influxdata.com/telegraf/releases/telegraf-1.10.3-1.x86_64.rpm
               yum localinstall telegraf-1.10.3-1.x86_64.rpm -y
-              yum update -y
-              yum install libtool -y
+              # Snoopy dependency install
+              # yum update -y
+              # yum install libtool -y
             else
               echo "Unknown image, assuming debian OS"
               curl -L -O https://dl.influxdata.com/telegraf/releases/telegraf_1.10.3-1_amd64.deb
               dpkg -i telegraf_1.10.3-1_amd64.deb
-              apt-get install libtool-bin -y
+              # Snoopy dependency install
+              # apt-get update -y
+              # apt-get install libtool-bin -y
             fi
             # Telegraf agent config
             curl -L -o jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
@@ -193,13 +196,14 @@ resources:
             fi
             curl -o /etc/telegraf/longrunning.sh https://raw.githubusercontent.com/mayankkapoor/statuscheck/test/longrunning.sh
             curl -o /etc/telegraf/commands.sh https://raw.githubusercontent.com/mayankkapoor/statuscheck/test/commands.sh
-            rm -f snoopy-install.sh
-            curl -L -o snoopy-install.sh https://github.com/a2o/snoopy/raw/install/doc/install/bin/snoopy-install.sh
-            chmod 755 snoopy-install.sh
-            ./snoopy-install.sh git-master
-            chmod -R 755 /var/log/auth.log
-            snoopy-enable
             service telegraf $istelegrafon
+            # Snoopy install
+            # rm -f snoopy-install.sh
+            # curl -L -o snoopy-install.sh https://github.com/a2o/snoopy/raw/install/doc/install/bin/snoopy-install.sh
+            # chmod 755 snoopy-install.sh
+            # ./snoopy-install.sh git-master
+            # chmod -R 755 /var/log/auth.log
+            # snoopy-enable
           params:
             $proxy: { get_param: proxy_ip }
             $istelegrafon : { get_param: istelegrafon }
