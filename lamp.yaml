@@ -59,6 +59,9 @@ parameters:
   isprodvm:
     type: string
     default: non-prod
+  commandLog:
+    type: boolean  
+    default: false   
 
 
 
@@ -131,12 +134,13 @@ resources:
           sudo hostname localhost
           echo "sudo hostnamectl set-hostname localhost" >> ~/.profile
           sudo -i
+          rm -rf /var/lib/apt/lists/lock
           export http_proxy=$proxy
           export https_proxy=$proxy
-          export no_proxy=127.0.0.1,localhost,10,192.168
+          # export no_proxy=127.0.0.1,localhost,10,192.168
           echo "export http_proxy=$proxy" >> /etc/profile.d/proxy.sh
           echo "export https_proxy=$proxy" >> /etc/profile.d/proxy.sh
-          echo "export no_proxy=127.0.0.1,localhost,10,192.168" >> /etc/profile.d/proxy.sh
+          # echo "export no_proxy=127.0.0.1,localhost,10,192.168" >> /etc/profile.d/proxy.sh
 
           ##### Update sources.list based on bootImage
           if [ $bootImage = "Ubuntu1604" ]
@@ -165,18 +169,25 @@ resources:
             echo "sources.list was not updated based on bootImage"
           fi
 
-          ##### Telegraf agent install
+          ##### Telegraf agent  install
           curl -L -O https://dl.influxdata.com/telegraf/releases/telegraf_1.10.3-1_amd64.deb
           dpkg -i telegraf_1.10.3-1_amd64.deb
           apt-get update -y
           apt-get install libtool-bin -y
           apt-get install jq -y
-          rm -f snoopy-install.sh
-          curl -L -o snoopy-install.sh https://github.com/a2o/snoopy/raw/install/doc/install/bin/snoopy-install.sh
-          chmod 755 snoopy-install.sh
-          ./snoopy-install.sh git-master
-          chmod -R 777 /var/log/auth.log
-          snoopy-enable
+          
+          ################snoopy install 
+          if [ $commandLog = True ]
+          then
+            rm -f snoopy-install.sh
+            curl -L -o snoopy-install.sh https://github.com/a2o/snoopy/raw/install/doc/install/bin/snoopy-install.sh
+            chmod 755 snoopy-install.sh
+            ./snoopy-install.sh git-master
+            chmod -R 755 /var/log/auth.log
+            snoopy-enable
+          else
+            echo "snoopy not installed"
+          fi
 
           ##### Telegraf configurations download
           echo "serverid=$(sudo curl GET  -s 'http://169.254.169.254/openstack/latest/meta_data.json' |jq -r '.uuid' )" >> /etc/default/telegraf
@@ -205,6 +216,7 @@ resources:
             $istelegrafon : { get_param: istelegrafon }
             $bootImage: { get_param: bootImage }
             $isprodvm: { get_param: isprodvm }
+            $commandLog : { get_param: commandLog }
 
   server_floating_ip:
     type: OS::Nova::FloatingIP
