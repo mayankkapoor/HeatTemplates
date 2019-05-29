@@ -60,8 +60,8 @@ parameters:
     type: string
     default: non-prod
   commandLog:
-    type: boolean  
-    default: false   
+    type: boolean
+    default: false
 
 
 
@@ -175,8 +175,8 @@ resources:
           apt-get update -y
           apt-get install libtool-bin -y
           apt-get install jq -y
-          
-          ################snoopy install 
+
+          ################snoopy install
           if [ $commandLog = True ]
           then
             rm -f snoopy-install.sh
@@ -194,12 +194,12 @@ resources:
           mv /etc/telegraf/telegraf.conf /etc/telegraf/telegraf-orig.conf
           if [ $isprodvm = "non-prod" ]
           then
-            curl -o /etc/telegraf/telegraf.conf https://raw.githubusercontent.com/mayankkapoor/statuscheck/test/telegraf_nonprod.conf
+            curl -o /etc/telegraf/telegraf.conf https://raw.githubusercontent.com/mayankkapoor/statuscheck/staging/telegraf_nonprod.conf
           else
-            curl -o /etc/telegraf/telegraf.conf https://raw.githubusercontent.com/mayankkapoor/statuscheck/test/telegraf_prod.conf
+            curl -o /etc/telegraf/telegraf.conf https://raw.githubusercontent.com/mayankkapoor/statuscheck/staging/telegraf_prod.conf
           fi
-          curl -o /etc/telegraf/longrunning.sh https://raw.githubusercontent.com/mayankkapoor/statuscheck/test/longrunning.sh
-          curl -o /etc/telegraf/commands.sh https://raw.githubusercontent.com/mayankkapoor/statuscheck/test/commands.sh
+          curl -o /etc/telegraf/longrunning.sh https://raw.githubusercontent.com/mayankkapoor/statuscheck/staging/longrunning.sh
+          curl -o /etc/telegraf/commands.sh https://raw.githubusercontent.com/mayankkapoor/statuscheck/staging/commands.sh
           service telegraf $istelegrafon
 
           #### stack installation
