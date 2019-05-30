@@ -1,0 +1,141 @@
+heat_template_version: 2017-02-24
+description: Kubernetes node definition
+parameters:
+    index:
+        type: number
+        label: Index
+        description: Index in floating IP list
+    key_name:
+        type: string
+        label: Key Name
+        description: SSH key to be used for all instances
+    image:
+        type: string
+        label: Image
+        description: Image to be used
+    flavor:
+        type: string
+        label: Instance Type
+        description: Type of instance (flavor) to deploy node
+    floating_ips:
+        type: comma_delimited_list
+        label: Floating IP IDs
+        description: Floating IP for node
+    availability_zone:
+        type: string
+        label: Availability Zone
+        description: Availabilito zone to create nodes in
+    name:
+        type: string
+        label: Instance Name
+        description: Name of the node
+    internal_net:
+        type: string
+        label: Internal Network
+        description: Network to connect node to
+    install_script:
+        type: string
+        label: Install Script
+        description: Script to run after cloud-init finishes
+    additional_config:
+        type: string
+        label: Additional Config
+        description: Additional software config
+        default: ""
+    security_group:
+        type: string
+        label: Security Group
+        description: Security group to apply to nodes
+    proxy_host:
+        type: string
+        label: Proxy Host
+        description: Proxy host to use
+        default: ""
+    proxy_port:
+        type: number
+        label: Proxy Port
+        description: Proxy port to use
+        default: 0
+
+conditions:
+    empty_additional_config:
+        equals:
+            - { get_param: additional_config }
+            - ""
+    empty_proxy:
+        equals:
+            - { get_param: proxy_host }
+            - ""
+resources:
+    port:
+        type: OS::Neutron::Port
+        properties:
+            admin_state_up: true
+            network_id: { get_param: internal_net }
+            security_groups:
+                - { get_param: security_group }
+    floatingip_association:
+        type: OS::Neutron::FloatingIPAssociation
+        properties:
+            floatingip_id: { get_param: [ floating_ips, { get_param: index } ] }
+            port_id: { get_resource: port }
+    instance:
+        type: OS::Nova::Server
+        properties:
+            availability_zone: { get_param: availability_zone }
+            image: { get_param: image }
+            flavor: { get_param: flavor }
+            key_name: { get_param: key_name }
+            networks:
+                - port: { get_resource: port }
+            name: { get_param: name }
+            user_data_format: SOFTWARE_CONFIG
+            user_data: { get_resource: user_data }
+    user_data_base:
+        type: OS::Heat::CloudConfig
+        properties:
+            cloud_config:
+                #cloud-config
+                manage_etc_hosts: localhost
+                package_update: true
+                packages:
+                    - socat
+                apt_sources:
+                    docker.list:
+                        source: "deb [arch=amd64] https://apt.dockerproject.org/repo ubuntu-xenial main"
+                        key: { get_file: docker.pgp }
+                runcmd:
+                    - - 'systemd-run'
+                      - '--on-boot=0s'
+                      - '--unit=kubeadm-install'
+                      - 'bash'
+                      - '-c'
+                      - { get_param: install_script }
+    user_data_proxy:
+        type: OS::Heat::CloudConfig
+        properties:
+            cloud_config:
+                if:
+                    - empty_proxy
+                    - {}
+                    - apt_proxy:
+                        str_replace:
+                          template: http://$ip:$port
+                          params:
+                              $ip: { get_param: proxy_host }
+                              $port: { get_param: proxy_port }
+    user_data:
+        type: OS::Heat::MultipartMime
+        properties:
+            parts:
+                if: 
+                    - empty_additional_config
+                    - - config: { get_resource: user_data_base }
+                      - config: { get_resource: user_data_proxy }
+                    - - config: { get_resource: user_data_base }
+                      - config: { get_resource: user_data_proxy }
+                      - config: { get_param: additional_config }
+outputs:
+    ip_address:
+        description: IP address of the node
+        value: { get_attr: [instance, first_address] }

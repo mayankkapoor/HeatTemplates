@@ -1,0 +1,241 @@
+heat_template_version: 2017-02-24
+description: Deploy Kubernetes cluster with kubeadm
+
+parameters:
+    key_name:
+        type: string
+        label: Key Name
+        description: SSH key to be used for all instances
+    image:
+        type: string
+        label: Image
+        description: Image to be used
+        default: ubuntu-16-04-amd64-cloudimg    
+    master_flavor:
+        type: string
+        label: Master Instance Type
+        description: Type of instance (flavor) to deploy master node
+        default: m1.small
+    master_floating_ip:
+        type: string
+        label: Master Floating IP ID
+        description: Floating IP for master node
+    slave_count:
+        type: number
+        label: Slave Count
+        description: Number of slaves
+        default: 3
+    slave_flavor:
+        type: string
+        label: Slave Instance Type
+        description: Type of instance (flavor) to deploy slave nodes
+        default: m1.small
+    slave_floating_ips:
+        type: comma_delimited_list
+        label: Slave Floating IP IDs
+        description: Floating IP for master node
+    public_network_id:
+        type: string
+        description: ID of the public network
+        default: public
+    internal_net:
+        type: string
+        description: ID of the internal network
+        default: public
+    resource_prefix:
+        type: string
+        description: Prefix to add to all resources
+        default: k8s-
+    dns_nameservers:
+        type: comma_delimited_list
+        label: DNS Nameservers
+        description: DNS nameservers to use on nodes
+        default: 8.8.8.8
+    availability_zone:
+        type: string
+        label: Availability Zone
+        description: Availabilito zone to create nodes in
+    security_group:
+        type: string
+        label: Security Group
+        description: Security group to apply to nodes
+    proxy_host:
+        type: string
+        label: Proxy Host
+        description: Proxy host to use
+        default: ""
+    proxy_port:
+        type: number
+        label: Proxy Port
+        description: Proxy port to use
+        default: 0
+
+conditions:
+    empty_proxy:
+        equals:
+            - { get_param: proxy_host }
+            - ""
+
+resources:
+    random_string:
+        type: OS::Heat::RandomString
+        properties:
+            length: 8
+            sequence: lowercase
+    ##### Master #####
+    master_floatingip:
+        type: OS::Neutron::FloatingIP
+        external_id: { get_param: master_floating_ip }
+        properties:
+            floating_network: { get_param: public_network_id }
+    master_config:
+        type: OS::Heat::CloudConfig
+        properties:
+            cloud_config:
+                write_files:
+                    - path: /root/calico.yaml
+                      content: { get_file: calico.yaml }
+                    - path: /root/tiller.yaml
+                      content: { get_file: tiller.yaml }
+                    - path: /root/spinnaker.yaml
+                      content:
+                          str_replace:
+                              template:
+                                  if:
+                                      - empty_proxy
+                                      - |
+                                        providers:
+                                          docker:
+                                            # Configure your Docker registries here
+                                            accounts:
+                                            - name: dockerhub
+                                              address: https://index.docker.io
+                                              repositories:
+                                                - library/alpine
+                                                - library/ubuntu
+                                                - library/centos
+                                                - library/nginx
+                                        jenkins:
+                                          Master:
+                                            NeverDownloadPlugins: true
+                                            rbac:
+                                              enabled: true
+                                        rbac:
+                                          enabled: true
+                                      - |
+                                        providers:
+                                          docker:
+                                            # Configure your Docker registries here
+                                            accounts:
+                                            - name: dockerhub
+                                              address: https://index.docker.io
+                                              repositories:
+                                                - library/alpine
+                                                - library/ubuntu
+                                                - library/centos
+                                                - library/nginx
+                                        jenkins:
+                                          Master:
+                                            NeverDownloadPlugins: true
+                                            rbac:
+                                              enabled: true
+                                        rbac:
+                                          enabled: true
+                                        clouddriver:
+                                          proxy:
+                                            http:
+                                              enabled: true
+                                              host: "$proxy_host"
+                                              port: $proxy_port
+                                            https:
+                                              enabled: true
+                                              host: "$proxy_host"
+                                              port: $proxy_port
+                              params:
+                                $proxy_host: { get_param: proxy_host }
+                                $proxy_port: { get_param: proxy_port }
+    master:
+        type: node.yaml
+        properties:
+            index: 0
+            key_name: { get_param: key_name }
+            image: { get_param: image }
+            flavor: { get_param: master_flavor }
+            floating_ips: [{ get_param: master_floating_ip }]
+            additional_config: { get_resource: master_config }
+            availability_zone: { get_param: availability_zone }
+            name:
+                str_replace:
+                    template: $prefix$random-master
+                    params:
+                        $prefix: { get_param: resource_prefix }
+                        $random: { get_resource: random_string }
+            internal_net: { get_param: internal_net }
+            proxy_host: { get_param: proxy_host }
+            proxy_port: { get_param: proxy_port }
+            security_group: { get_param: security_group }
+            install_script:
+                str_replace:
+                    params:
+                        $floatingip: { get_attr: [master_floatingip, floating_ip_address] }
+                        $token: { get_attr: [token, value] }
+                        $proxy_host: { get_param: proxy_host }
+                        $proxy_port: { get_param: proxy_port }
+                    template: { get_file: master.sh }
+
+    ##### Slaves #####
+    slaves:
+        type: OS::Heat::ResourceGroup
+        properties:
+            count: { get_param: slave_count }
+            resource_def:
+                type: node.yaml
+                properties:
+                    index: "%index%"
+                    key_name: { get_param: key_name }
+                    image: { get_param: image }
+                    flavor: { get_param: slave_flavor }
+                    floating_ips: { get_param: slave_floating_ips }
+                    availability_zone: { get_param: availability_zone }
+                    name:
+                        str_replace:
+                            template: $prefix$random-slave-%index%
+                            params:
+                                $prefix: { get_param: resource_prefix }
+                                $random: { get_resource: random_string }
+                    internal_net: { get_param: internal_net }
+                    proxy_host: { get_param: proxy_host }
+                    proxy_port: { get_param: proxy_port }
+                    security_group: { get_param: security_group }
+                    install_script:
+                        str_replace:
+                            params:
+                                $token: { get_attr: [token, value] }
+                                $master_ip: { get_attr: [ master, ip_address ] }
+                                $proxy_host: { get_param: proxy_host }
+                                $proxy_port: { get_param: proxy_port }
+                            template: { get_file: slave.sh }
+    ##### Token for kubeadm ####
+    token_part_1:
+        type: OS::Heat::RandomString
+        properties:
+            length: 6
+            character_classes: []
+            character_sequences:
+                - {min: 6, sequence: "0123456789abcdef"}
+    token_part_2:
+        type: OS::Heat::RandomString
+        properties:
+            length: 16
+            character_classes: []
+            character_sequences:
+                - {min: 16, sequence: "0123456789abcdef"}
+    token:
+        type: OS::Heat::Value
+        properties:
+            value:
+                str_replace:
+                    template: $part1.$part2
+                    params:
+                        $part1: { get_resource: token_part_1 }
+                        $part2: { get_resource: token_part_2 }
