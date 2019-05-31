@@ -135,15 +135,6 @@ There you can check if Kubernetes deploymentis is in progress:
 $ journalctl -fu kubeadm-install
 ```
 
-This command will output lines from log of kubernetes installation. Last lines
-are expected to be like these:
-
-```
-Feb 05 20:32:41 k8s-xnpetidzawduzisz-master sudo[5850]: pam_unix(sudo:session): session closed for user ubuntu
-Feb 05 20:32:41 k8s-xnpetidzawduzisz-master bash[3199]: + cp /root/spinnaker.yaml /home/ubuntu/spinnaker.yaml
-Feb 05 20:32:41 k8s-xnpetidzawduzisz-master bash[3199]: + chown ubuntu:ubuntu /home/ubuntu/spinnaker.yaml
-```
-
 Now you can verify that kubernetes is up:
 
 ```bash
@@ -159,29 +150,3 @@ If you don't see all nodes there or some of them are in NotReady state, it
 means that cluster is not up yet. You should repeat `kubectl get nodes` again
 untill you see all nodes in Ready state.
 
-### Install Spinnaker with Helm
-
-Tiller (Helm server component) is already installed on the cluster, and client
-is configured. Now you can install Spinnaker from Helm chart:
-
-```bash
-$ helm install -f spinnaker.yaml --name spinnaker spinnaker-3.1.0.tgz --wait
-```
-
-It will run for some time and then output information about created release
-object as well as all resources created in Kubernetes for it.
-
-After it finishes, you can determine NodePort assigned to its UI using:
-```bash
-$ kubectl get --namespace default -o jsonpath="{.spec.ports[0].nodePort}" services spinnaker-spinnaker-deck
-31860
-```
-
-Now you can use it with one of your floating IPs to see Spinnaker UI in your
-browser like this: `http://172.17.50.93:31860`
-
-Jenkins deployed together with Spinnaker could be accessed using NodePort as well:
-```bash
-$ kubectl get --namespace spinnaker -o jsonpath="{.spec.ports[0].nodePort}" services jenkins-spinnaker
-30991
-```
