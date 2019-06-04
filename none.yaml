@@ -126,9 +126,8 @@ resources:
         str_replace:
           template: |
             #!/bin/bash -v
-            sudo hostname localhost
-            echo "sudo hostnamectl set-hostname localhost" >> ~/.profile
             sudo -i
+            echo "127.0.1.1 $serverName" >> /etc/hosts
             rm -rf /var/lib/apt/lists/lock
             export http_proxy=$proxy
             export https_proxy=$proxy
@@ -226,10 +225,11 @@ resources:
             service telegraf $istelegrafon
           params:
             $proxy: { get_param: proxy_ip }
-            $istelegrafon : { get_param: istelegrafon }
+            $istelegrafon: { get_param: istelegrafon }
             $bootImage: { get_param: bootImage }
             $isprodvm: { get_param: isprodvm }
-            $commandLog : { get_param: commandLog }
+            $commandLog: { get_param: commandLog }
+            $serverName: { get_param: serverName }
 
 
   server_floating_ip:
