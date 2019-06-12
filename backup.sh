@@ -31,7 +31,12 @@ fi
 systemctl daemon-reload
 systemctl restart docker
 kubeadm config images pull
-until wget $master_ip/joinslave -O /root/joinslave; do   sleep 2; done
-chmod 755 /root/joinslave
 unset HTTP_PROXY HTTPS_PROXY
-/root/joinslave
+kubeadm init --pod-network-cidr=192.168.0.0/16
+mkdir -p /root/.kube
+cp /etc/kubernetes/admin.conf /root/.kube/config
+chown root:root /root/.kube/config 
+export KUBECONFIG=/etc/kubernetes/admin.conf
+cd /root
+python2 webserver.py
+kubeadm token create --print-join-command >> printcommand

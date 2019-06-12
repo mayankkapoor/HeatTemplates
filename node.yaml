@@ -56,14 +56,10 @@ parameters:
         label: Proxy Port
         description: Proxy port to use
         default: 0
-    volumeSize:
+    mastervolumesize:
         type: number
         default: 50
-
-    volumeName:
-        type: string
-        default: k8s-rootdisk
-        description: name of the bootable volume
+   
 conditions:
     empty_additional_config:
         equals:
@@ -90,7 +86,6 @@ resources:
         type: OS::Nova::Server
         properties:
             availability_zone: { get_param: availability_zone }
-            image: { get_param: image }
             flavor: { get_param: flavor }
             key_name: { get_param: key_name }
             networks:
@@ -98,6 +93,11 @@ resources:
             name: { get_param: name }
             user_data_format: SOFTWARE_CONFIG
             user_data: { get_resource: user_data }
+            block_device_mapping_v2:
+                - device_name: vda
+                  image: { get_param: image }
+                  volume_size: { get_param: mastervolumesize }
+                  delete_on_termination: True
     user_data_base:
         type: OS::Heat::CloudConfig
         properties:

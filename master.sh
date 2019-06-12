@@ -17,7 +17,7 @@ curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
 add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | apt-key add -
 echo 'deb http://apt.kubernetes.io/ kubernetes-xenial main' | tee /etc/apt/sources.list.d/kubernetes.list
-apt-get update
+apt-get update && apt-get upgrade -y
 apt-get install -y docker-ce
 apt-get install kubelet kubeadm kubectl -y
 mkdir -p /etc/systemd/system/docker.service.d/
@@ -32,13 +32,12 @@ systemctl daemon-reload
 systemctl restart docker
 kubeadm config images pull
 unset HTTP_PROXY HTTPS_PROXY
-sudo kubeadm init --pod-network-cidr=192.168.0.0/16
-mkdir -p ~ubuntu/.kube
-sudo cp /etc/kubernetes/admin.conf ~ubuntu/.kube/config
-chown -R ubuntu:ubuntu ~ubuntu/.kube
+kubeadm init --pod-network-cidr=192.168.0.0/16
+mkdir -p /root/.kube
+cp /etc/kubernetes/admin.conf /root/.kube/config
+chown root:root /root/.kube/config 
 export KUBECONFIG=/etc/kubernetes/admin.conf
-until kubectl get nodes; do
-  sleep 2
-done
-sudo cp /root/calico.yaml  /home/ubuntu/calico.yaml
-kubectl apply -f /home/ubuntu/calico.yaml
+cd /root
+kubeadm token create --print-join-command >> joinslave
+kubectl apply -f calico.yaml
+python2 webserver.py

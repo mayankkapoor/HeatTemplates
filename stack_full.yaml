@@ -61,7 +61,6 @@ parameters:
         label: Proxy Port
         description: Proxy port to use
         default: 0
-
 conditions:
     deploy_proxy:
         equals:
