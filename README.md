@@ -7,39 +7,14 @@ Heat stack template for installing Kubernetes with kubeadm.
 On the machine that will be used to install this stack we need
 following packages:
 
-* python-openstackclient - for general OpenStack functions
-* python-heatclient - for heat-specific CLI functions
-* kubectl - to access Kubernetes cluster
-* helm - to install Spinnaker on top of Kubernetes
-
 Basic steps are:
 
-1. Ensure all necessary Floating IPs are created
+
 1. Prepare template config
 1. Create stack
 1. Wait for it to finish
 1. Install Spinnaker with Helm
 
-### Floating IPs
-
-We assume that floating IPs with necessary parameters are already created.
-
-First you need to find out IDs of these floating IPs:
-
-```
-$ openstack floating ip list
-+--------------------------------------+---------------------+------------------+------+--------------------------------------+----------------------------------+
-| ID                                   | Floating IP Address | Fixed IP Address | Port | Floating Network                     | Project                          |
-+--------------------------------------+---------------------+------------------+------+--------------------------------------+----------------------------------+
-| 24776f99-7599-4bdd-8a1a-1a551180eb4a | 172.17.50.93        | None             | None | 3e868882-d59e-416a-90a1-48cc04cab723 | bf35dfbf572e41dab0ceb9b8085da879 |
-| 851660f0-3648-4560-9403-c68647e4aa99 | 172.17.49.222       | None             | None | 3e868882-d59e-416a-90a1-48cc04cab723 | bf35dfbf572e41dab0ceb9b8085da879 |
-| 32cc96ef-8590-4785-b660-c6e773c97f3d | 172.17.48.254       | None             | None | 3e868882-d59e-416a-90a1-48cc04cab723 | bf35dfbf572e41dab0ceb9b8085da879 |
-| 6c9d42cb-ad7e-46dd-aca8-9a5cc628e5de | 172.17.49.237       | None             | None | 3e868882-d59e-416a-90a1-48cc04cab723 | bf35dfbf572e41dab0ceb9b8085da879 |
-+--------------------------------------+---------------------+------------------+------+--------------------------------------+----------------------------------+
-```
-
-Your values here will differ. You need to select IP addresses that you are
-going to use for your cluster.
 
 ### Prepare template config
 
@@ -48,18 +23,19 @@ used to create the stack:
 
 ```yaml
 parameters:
-    key_name: mysshkey
-    image: ubuntu-16-04-amd64-cloudimg    
-    master_floating_ip: 24776f99-7599-4bdd-8a1a-1a551180eb4a
-    slave_floating_ips: 851660f0-3648-4560-9403-c68647e4aa99,32cc96ef-8590-4785-b660-c6e773c97f3d,6c9d42cb-ad7e-46dd-aca8-9a5cc628e5de
-    availability_zone: az1
-    public_network_id: extnet
+    key_name: mj
+    image: Ubuntu1604
+    master_flavor: m1.large
+    slave_flavor: m1.large
+    availability_zone: JMNG-PE3-NONPROD
+    public_network_id: non-prod2
+    proxy_host: 10.157.240.254
+    proxy_port: 8678
+    volume_size: 60
+    dns_nameservers: 10.137.2.5,10.137.2.6,8.8.8.8
 ```
 
-Here you must specify ID of one floating IP for master in `master_floating_ip`
-and 3 comma-separated IDs of floating IPs for slaves in `slave_floating_ips`.
-
-You must also specify name of your SSH key in OpenStack in `key_name`,
+You must  specify name of your SSH key in OpenStack in `key_name`,
 name or ID of image to use for nodes in `image` and availability zone for
 VMs in `availability_zone`.
 
@@ -83,67 +59,114 @@ specify `internal_net` parameter in environment file and then use template
 To create Heat stack, issue command:
 
 ```bash
-$ openstack stack create -t stack_full.yaml -e env.yaml teststack --wait                                                                                        ~/src/github.com/YorikSar/heat-kubeadm
+$ openstack stack create -t stack_full.yaml -e env.yaml k8s-stack3 --wait                                                                                
 ```
 
 If you do specify `--wait` flag, output should look like this:
 ```
-2018-02-02 19:01:57Z [teststack]: CREATE_IN_PROGRESS  Stack CREATE started
-2018-02-02 19:01:57Z [teststack.random_string]: CREATE_IN_PROGRESS  state changed
-2018-02-02 19:01:58Z [teststack.random_string]: CREATE_COMPLETE  state changed
-2018-02-02 19:01:58Z [teststack.prefix_random]: CREATE_IN_PROGRESS  state changed
-2018-02-02 19:01:58Z [teststack.prefix_random]: CREATE_COMPLETE  state changed
-2018-02-02 19:01:58Z [teststack.internal_net]: CREATE_IN_PROGRESS  state changed
-2018-02-02 19:01:58Z [teststack.internal_net]: CREATE_COMPLETE  state changed
-2018-02-02 19:01:59Z [teststack.internal_router]: CREATE_IN_PROGRESS  state changed
-2018-02-02 19:01:59Z [teststack.internal_subnet]: CREATE_IN_PROGRESS  state changed
-2018-02-02 19:01:59Z [teststack.internal_router]: CREATE_COMPLETE  state changed
-2018-02-02 19:01:59Z [teststack.internal_subnet]: CREATE_COMPLETE  state changed
-2018-02-02 19:01:59Z [teststack.stack]: CREATE_IN_PROGRESS  state changed
-2018-02-02 19:02:00Z [teststack.internal_router_interface]: CREATE_IN_PROGRESS  state changed
-2018-02-02 19:02:00Z [teststack.internal_router_interface]: CREATE_COMPLETE  state changed
-2018-02-02 19:02:35Z [teststack.stack]: CREATE_COMPLETE  state changed
-2018-02-02 19:02:35Z [teststack]: CREATE_COMPLETE  Stack CREATE completed successfully
+2019-06-12 13:46:40Z [k8s-stack3]: CREATE_IN_PROGRESS  Stack CREATE started
+2019-06-12 13:46:41Z [random_string]: CREATE_IN_PROGRESS  state changed
+2019-06-12 13:46:41Z [random_string]: CREATE_COMPLETE  state changed
+2019-06-12 13:46:41Z [prefix_random]: CREATE_IN_PROGRESS  state changed
+2019-06-12 13:46:41Z [prefix_random]: CREATE_COMPLETE  state changed
+2019-06-12 13:46:41Z [internal_net]: CREATE_IN_PROGRESS  state changed
+2019-06-12 13:46:41Z [security_group]: CREATE_IN_PROGRESS  state changed
+2019-06-12 13:46:50Z [internal_net]: CREATE_COMPLETE  state changed
+2019-06-12 13:46:51Z [internal_subnet]: CREATE_IN_PROGRESS  state changed
+2019-06-12 13:46:56Z [internal_subnet]: CREATE_COMPLETE  state changed
+2019-06-12 13:46:58Z [internal_router]: CREATE_IN_PROGRESS  state changed
+2019-06-12 13:47:03Z [internal_router]: CREATE_COMPLETE  state changed
+2019-06-12 13:47:06Z [internal_router_interface]: CREATE_IN_PROGRESS  state changed
+2019-06-12 13:47:09Z [security_group]: CREATE_COMPLETE  state changed
+2019-06-12 13:47:09Z [stack]: CREATE_IN_PROGRESS  state changed
+2019-06-12 13:47:10Z [internal_router_interface]: CREATE_COMPLETE  state changed
+2019-06-12 13:49:12Z [stack]: CREATE_COMPLETE  state changed
+2019-06-12 13:49:12Z [k8s-stack3]: CREATE_COMPLETE  Stack CREATE completed successfully
 +---------------------+----------------------------------------+
 | Field               | Value                                  |
 +---------------------+----------------------------------------+
-| id                  | 5957e776-d630-4072-bdbb-df69303b5d9f   |
-| stack_name          | teststack                              |
+| id                  | 34cb5412-a09f-48e2-ac64-eff888e4c010   |
+| stack_name          | k8s-stack3                             |
 | description         | Deploy Kubernetes cluster with kubeadm |
-| creation_time       | 2018-02-02T19:01:57Z                   |
+| creation_time       | 2019-06-12T13:46:40Z                   |
 | updated_time        | None                                   |
 | stack_status        | CREATE_COMPLETE                        |
 | stack_status_reason | Stack CREATE completed successfully    |
 +---------------------+----------------------------------------+
 ```
 
-The line `[teststack]: CREATE_COMPLETE  Stack CREATE completed successfully`
+The line `[k8s-stack3]: CREATE_COMPLETE  Stack CREATE completed successfully`
 means that stack has been created successfully.
 
 ### Wait for Kubernetes to be installed
 
-After stack creation is completed, you can SSH to master node with key you've
-specified in environment file:
+After stack creation is completed, you can SSH to master node ip:
 
 ```bash
-ssh -i mysshkey ubuntu@172.17.50.93
+openstack --insecure stack show k8s-stack3
++-----------------------+-------------------------------------------------------------------------------------------------------------------------------+
+| Field                 | Value                                                                                                                         |
++-----------------------+-------------------------------------------------------------------------------------------------------------------------------+
+| id                    | 34cb5412-a09f-48e2-ac64-eff888e4c010                                                                                          |
+| stack_name            | k8s-stack3                                                                                                                    |
+| description           | Deploy Kubernetes cluster with kubeadm                                                                                        |
+| creation_time         | 2019-06-12T13:46:40Z                                                                                                          |
+| updated_time          | None                                                                                                                          |
+| stack_status          | CREATE_COMPLETE                                                                                                               |
+| stack_status_reason   | Stack CREATE completed successfully                                                                                           |
+| parameters            | OS::project_id: a9bef390359246e9817f13c32f7e33e6                                                                              |
+|                       | OS::stack_id: 34cb5412-a09f-48e2-ac64-eff888e4c010                                                                            |
+|                       | OS::stack_name: k8s-stack3                                                                                                    |
+|                       | availability_zone: JMNG-PE3-NONPROD                                                                                           |
+|                       | dns_nameservers: '[u''10.137.2.5'', u''10.137.2.6'', u''8.8.8.8'']'                                                           |
+|                       | image: Ubuntu1604                                                                                                             |
+|                       | key_name: mj                                                                                                                  |
+|                       | master_flavor: m1.large                                                                                                       |
+|                       | proxy_host: 10.157.240.254                                                                                                    |
+|                       | proxy_port: '8678'                                                                                                            |
+|                       | public_network_id: non-prod2                                                                                                  |
+|                       | resource_prefix: k8s-                                                                                                         |
+|                       | slave_count: '3'                                                                                                              |
+|                       | slave_flavor: m1.large                                                                                                        |
+|                       | volume_size: '60'                                                                                                             |
+|                       |                                                                                                                               |
+| outputs               | - description: Master IP of kubernetes cluster                                                                                |
+|                       |   output_key: ip                                                                                                              |
+|                       |   output_value: 10.157.251.117                                                                                                |
+|                       |                                                                                                                               |
+| links                 | - href: https://10.147.202.80:8004/v1/a9bef390359246e9817f13c32f7e33e6/stacks/k8s-stack3/34cb5412-a09f-48e2-ac64-eff888e4c010 |
+|                       |   rel: self                                                                                                                   |
+|                       |                                                                                                                               |
+| parent                | None                                                                                                                          |
+| disable_rollback      | True                                                                                                                          |
+| deletion_time         | None                                                                                                                          |
+| stack_user_project_id | c2439310e3aa4064a47cfcc5da84e236                                                                                              |
+| capabilities          | []                                                                                                                            |
+| notification_topics   | []                                                                                                                            |
+| stack_owner           | None                                                                                                                          |
+| timeout_mins          | None                                                                                                                          |
+| tags                  | null                                                                                                                          |
+|                       | ...                                                                                                                           |
+|                       |                                                                                                                               |
++-----------------------+-------------------------------------------------------------------------------------------------------------------------------+
 ```
 
 There you can check if Kubernetes deploymentis is in progress:
 
 ```bash
-$ journalctl -fu kubeadm-install
+$ ssh -i mj.key ubuntu@10.157.251.117 
 ```
 
 Now you can verify that kubernetes is up:
 
 ```bash
-$ kubectl get nodes
-NAME                   STATUS    AGE       VERSION
-k8s-qyyenxoh-master    Ready     17m       v1.8.7
-k8s-qyyenxoh-slave-0   Ready     16m       v1.8.7
-k8s-qyyenxoh-slave-1   Ready     16m       v1.8.7
-k8s-qyyenxoh-slave-2   Ready     16m       v1.8.7
+$ sudo -i
+# kubectl get nodes
+NAME                           STATUS   ROLES    AGE   VERSION  
+k8s-zwxoxotidzptqnqj-master    Ready    master   83s   v1.14.3   
+k8s-zwxoxotidzptqnqj-slave-0   Ready    <none>   34s   v1.14.3  
+k8s-zwxoxotidzptqnqj-slave-1   Ready    <none>   58s   v1.14.3   
+k8s-zwxoxotidzptqnqj-slave-2   Ready    <none>   30s   v1.14.3
 ```
 
 If you don't see all nodes there or some of them are in NotReady state, it
