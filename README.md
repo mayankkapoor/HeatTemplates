@@ -11,9 +11,8 @@ Basic steps are:
 
 
 1. Prepare template config
-1. Create stack
-1. Wait for it to finish
-1. Install Spinnaker with Helm
+2. Create stack
+3. Wait for it to finish
 
 
 ### Prepare template config
