@@ -17,6 +17,10 @@ parameters:
         type: string
         label: Instance Type
         description: Type of instance (flavor) to deploy node
+    public_network_id:
+        type: string
+        description: ID of the public network
+        default: public
     floating_ips:
         type: comma_delimited_list
         label: Floating IP IDs
@@ -56,7 +60,7 @@ parameters:
         label: Proxy Port
         description: Proxy port to use
         default: 0
-    mastervolumesize:
+    volume_size:
         type: number
         default: 50
    
@@ -78,8 +82,10 @@ resources:
             security_groups:
                 - { get_param: security_group }
     floatingip_association:
+#        type: OS::Neutron::FloatingIP
         type: OS::Neutron::FloatingIPAssociation
         properties:
+#            floating_network_id: { get_param: public_net_id }
             floatingip_id: { get_param: [ floating_ips, { get_param: index } ] }
             port_id: { get_resource: port }
     instance:
@@ -96,7 +102,7 @@ resources:
             block_device_mapping_v2:
                 - device_name: vda
                   image: { get_param: image }
-                  volume_size: { get_param: mastervolumesize }
+                  volume_size: { get_param: volume_size }
                   delete_on_termination: True
     user_data_base:
         type: OS::Heat::CloudConfig
