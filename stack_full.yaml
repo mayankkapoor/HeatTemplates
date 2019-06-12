@@ -16,10 +16,6 @@ parameters:
         label: Master Instance Type
         description: Type of instance (flavor) to deploy master node
         default: m1.small
-    master_floating_ip:
-        type: string
-        label: Master Floating IP ID
-        description: Floating IP for master node
     slave_count:
         type: number
         label: Slave Count
@@ -30,10 +26,6 @@ parameters:
         label: Slave Instance Type
         description: Type of instance (flavor) to deploy slave nodes
         default: m1.small
-    slave_floating_ips:
-        type: comma_delimited_list
-        label: Slave Floating IP IDs
-        description: Floating IP for master node
     public_network_id:
         type: string
         description: ID of the public network
@@ -157,10 +149,8 @@ resources:
             key_name: { get_param: key_name }
             image: { get_param: image }
             master_flavor: { get_param: master_flavor }
-            master_floating_ip: { get_param: master_floating_ip }
             slave_count: { get_param: slave_count }
             slave_flavor: { get_param: slave_flavor }
-            slave_floating_ips: { get_param: slave_floating_ips }
             public_network_id: { get_param: public_network_id }
             internal_net: { get_resource: internal_net }
             resource_prefix: { get_attr: [prefix_random, value] }
@@ -191,3 +181,8 @@ resources:
             resource_prefix: { get_attr: [prefix_random, value] }
             availability_zone: { get_param: availability_zone }
             security_group: { get_resource: security_group }
+
+outputs:
+  ip:
+    description: Master IP of kubernetes cluster
+    value: {get_attr: [stack, ip]}

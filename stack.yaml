@@ -16,10 +16,6 @@ parameters:
         label: Master Instance Type
         description: Type of instance (flavor) to deploy master node
         default: m1.small
-    master_floating_ip:
-        type: string
-        label: Master Floating IP ID
-        description: Floating IP for master node
     slave_count:
         type: number
         label: Slave Count
@@ -30,10 +26,6 @@ parameters:
         label: Slave Instance Type
         description: Type of instance (flavor) to deploy slave nodes
         default: m1.small
-    slave_floating_ips:
-        type: comma_delimited_list
-        label: Slave Floating IP IDs
-        description: Floating IP for master node
     public_network_id:
         type: string
         description: ID of the public network
@@ -85,11 +77,6 @@ resources:
             length: 8
             sequence: lowercase
     ##### Master #####
-    master_floatingip:
-        type: OS::Neutron::FloatingIP
-        external_id: { get_param: master_floating_ip }
-        properties:
-            floating_network: { get_param: public_network_id }
     master_config:
         type: OS::Heat::CloudConfig
         properties:
@@ -107,7 +94,6 @@ resources:
             image: { get_param: image }
             flavor: { get_param: master_flavor }
             public_network_id: { get_param: public_network_id }
-            floating_ips: [{ get_param: master_floating_ip }]
             additional_config: { get_resource: master_config }
             availability_zone: { get_param: availability_zone }
             volume_size: { get_param: volume_size }
@@ -124,7 +110,6 @@ resources:
             install_script:
                 str_replace:
                     params:
-                        $floatingip: { get_attr: [master_floatingip, floating_ip_address] }
                         $proxy_host: { get_param: proxy_host }
                         $proxy_port: { get_param: proxy_port }
                     template: { get_file: master.sh }
@@ -141,7 +126,6 @@ resources:
                     image: { get_param: image }
                     flavor: { get_param: slave_flavor }
                     public_network_id: { get_param: public_network_id }
-                    floating_ips: { get_param: slave_floating_ips }
                     availability_zone: { get_param: availability_zone }
                     volume_size: { get_param: volume_size}
                     name:
@@ -157,7 +141,12 @@ resources:
                     install_script:
                         str_replace:
                             params:
-                                $master_ip: { get_attr: [ master, ip_address ] }
+                                $master_ip: { get_attr: [ master, ip ] }
                                 $proxy_host: { get_param: proxy_host }
                                 $proxy_port: { get_param: proxy_port }
                             template: { get_file: slave.sh }
+
+outputs:
+  ip:
+    description: Master IP of kubernetes cluster
+    value: {get_attr: [master, ip] }

@@ -21,10 +21,6 @@ parameters:
         type: string
         description: ID of the public network
         default: public
-    floating_ips:
-        type: comma_delimited_list
-        label: Floating IP IDs
-        description: Floating IP for node
     availability_zone:
         type: string
         label: Availability Zone
@@ -81,12 +77,10 @@ resources:
             network_id: { get_param: internal_net }
             security_groups:
                 - { get_param: security_group }
-    floatingip_association:
-#        type: OS::Neutron::FloatingIP
-        type: OS::Neutron::FloatingIPAssociation
+    instance_floatingip:
+        type: OS::Neutron::FloatingIP
         properties:
-#            floating_network_id: { get_param: public_net_id }
-            floatingip_id: { get_param: [ floating_ips, { get_param: index } ] }
+            floating_network_id: { get_param: public_network_id }
             port_id: { get_resource: port }
     instance:
         type: OS::Nova::Server
@@ -145,6 +139,6 @@ resources:
                       - config: { get_resource: user_data_proxy }
                       - config: { get_param: additional_config }
 outputs:
-    ip_address:
-        description: IP address of the node
-        value: { get_attr: [instance, first_address] }
+  ip:
+    description: Master IP of kubernetes cluster
+    value: {get_attr: [ instance_floatingip, floating_ip_address] }
