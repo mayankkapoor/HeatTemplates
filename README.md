@@ -22,16 +22,16 @@ used to create the stack:
 
 ```yaml
 parameters:
-    key_name: mj
+    key_name: XXXXX
     image: Ubuntu1604
     master_flavor: m1.large
     slave_flavor: m1.large
-    availability_zone: JMNG-PE3-NONPROD
-    public_network_id: non-prod2
-    proxy_host: 10.157.240.254
-    proxy_port: 8678
-    volume_size: 60
-    dns_nameservers: 10.137.2.5,10.137.2.6,8.8.8.8
+    availability_zone: XXXXX
+    public_network_id: XXXXX
+    proxy_host: XXXXX
+    proxy_port: XXXXX
+    volume_size: XXXXX
+    dns_nameservers: XXXXX,XXXXX
 ```
 
 You must  specify name of your SSH key in OpenStack in `key_name`,
@@ -41,8 +41,8 @@ VMs in `availability_zone`.
 If you need to use proxy with your environment, you can add these options:
 
 ```yaml
-    proxy_host: myproxy.local
-    proxy_port: 8080
+    proxy_host: XXXXX
+    proxy_port: XXXXX
 ```
 
 All other options and their descriptions can be found at the top of
@@ -58,7 +58,7 @@ specify `internal_net` parameter in environment file and then use template
 To create Heat stack, issue command:
 
 ```bash
-$ openstack stack create -t stack_full.yaml -e env.yaml k8s-stack3 --wait                                                                                
+$ openstack --insecure stack create -t stack_full.yaml -e env.yaml k8s-stack3 --wait                                                                                
 ```
 
 If you do specify `--wait` flag, output should look like this:
