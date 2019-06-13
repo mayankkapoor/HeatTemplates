@@ -61,9 +61,12 @@ parameters:
         label: Proxy Port
         description: Proxy port to use
         default: 0
-    volume_size:
+    master_volume_size:
         type: number
         default: 50
+    slave_volume_size:
+        type: number
+        default: 80
 conditions:
     empty_proxy:
         equals:
@@ -86,6 +89,8 @@ resources:
                       content: { get_file: calico.yaml }
                     - path: /root/webserver.py
                       content: { get_file: webserver.py }
+                    - path: /root/ingress.yaml
+                      content: { get_file: ingress.yaml }
     master:
         type: node.yaml
         properties:
@@ -96,7 +101,7 @@ resources:
             public_network_id: { get_param: public_network_id }
             additional_config: { get_resource: master_config }
             availability_zone: { get_param: availability_zone }
-            volume_size: { get_param: volume_size }
+            volume_size: { get_param: master_volume_size }
             name:
                 str_replace:
                     template: $prefix$random-master
@@ -127,7 +132,7 @@ resources:
                     flavor: { get_param: slave_flavor }
                     public_network_id: { get_param: public_network_id }
                     availability_zone: { get_param: availability_zone }
-                    volume_size: { get_param: volume_size}
+                    volume_size: { get_param: slave_volume_size }
                     name:
                         str_replace:
                             template: $prefix$random-slave-%index%

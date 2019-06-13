@@ -53,10 +53,12 @@ parameters:
         label: Proxy Port
         description: Proxy port to use
         default: 0
-    volume_size:
+    master_volume_size:
         type: number
         default: 50
-
+    slave_volume_size:
+        type: number
+        default: 80
 conditions:
     deploy_proxy:
         equals:
@@ -157,7 +159,8 @@ resources:
             dns_nameservers: { get_param: dns_nameservers }
             availability_zone: { get_param: availability_zone }
             security_group: { get_resource: security_group }
-            volume_size: { get_param: volume_size }
+            master_volume_size: { get_param: master_volume_size }
+            slave_volume_size: { get_param: slave_volume_size }
             proxy_host:
                 if:
                     - deploy_proxy

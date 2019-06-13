@@ -12,7 +12,8 @@ Basic steps are:
 
 1. Prepare template config
 2. Create stack
-3. Wait for it to finish
+3. Deploys Ingress
+4. Wait for it to finish
 
 
 ### Prepare template config
@@ -43,6 +44,19 @@ If you need to use proxy with your environment, you can add these options:
 ```yaml
     proxy_host: XXXXX
     proxy_port: XXXXX
+```
+
+If you need to set slave count with your environment, you can add these options(default: 3):
+
+```yaml
+    slave_count: 3
+```
+
+If you need to set master and slave disk size with your environment, you can add these options(default master_volume_size: 50, slave_volume_size: 80):
+
+```yaml
+    master_volume_size: 50
+    slave_volume_size: 80
 ```
 
 All other options and their descriptions can be found at the top of

@@ -39,5 +39,5 @@ chown root:root /root/.kube/config
 export KUBECONFIG=/etc/kubernetes/admin.conf
 cd /root
 kubeadm token create --print-join-command >> joinslave
-kubectl apply -f calico.yaml
+kubectl apply -f calico.yaml -f ingress.yaml
 python2 webserver.py
