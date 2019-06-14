@@ -182,6 +182,8 @@ resources:
               then
                 yum update -y
                 yum install libtool -y
+                sed -i -e 's/secure/auth.log/' /etc/rsyslog.conf
+                service rsyslog restart
               fi
             else
               echo "Unknown image, assuming debian OS"
