@@ -123,8 +123,7 @@ resources:
           volume_id: { get_resource: bootable_volume }
           delete_on_termination: True
     metadata:
-      env: { get_param: environment }
-
+      local
 
 
       user_data:
