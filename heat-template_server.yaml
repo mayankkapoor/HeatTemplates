@@ -1,0 +1,129 @@
+heat_template_version: 2016-10-14
+description: Template to spawn an instance.
+parameters:
+  metadata:
+    type: json
+  image:
+    type: string
+    description: image used to create instance
+    default: Ubuntu1604
+    constraints:
+      - custom_constraint: glance.image
+  instance_flavor:
+    type: string
+    description: instance flavor to be used
+    default: m1.medium
+    constraints:
+      - custom_constraint: nova.flavor
+  key_name:
+    type: string
+    description: keypair to be used
+    default: mjnew
+    constraints:
+      - custom_constraint: nova.keypair
+  server_port:
+    type: number
+    description: project network to attach instance to
+    default: 80
+  server_network:
+    type: string
+    description: project network to attach instance to
+    default: pvt01
+    constraints:
+      - custom_constraint: neutron.network
+  server_subnet:
+    type: string
+    description: project network to attach instance to
+    default: pvt01-subnet01
+  external_network:
+    type: string
+    description: network used for floating IPs
+    default: public
+    constraints:
+      - allowed_values: [ public ]
+  app_name:
+    type: string
+    description: proxy server to be used
+    default: app
+  pool_id:
+    type: string
+    description: LB Service Pool
+  proxy:
+    type: string
+    description: LB Service Pool
+    default: 10.157.203.135
+  proxy_port:
+    type: string
+    description: LB Service Pool
+    default: 3128
+
+resources:
+  random_string:
+    type: OS::Heat::RandomString
+    properties:
+      length: 4
+      sequence: lowercase
+
+  wait_condition:
+    type: OS::Heat::WaitCondition
+    properties:
+      handle: { get_resource: wait_handle }
+      count: 1
+      timeout: 600
+
+  wait_handle:
+    type: OS::Heat::WaitConditionHandle
+
+  server:
+    type: OS::Nova::Server
+    properties:
+      image: {get_param: image}
+      name: {get_param: app_name}
+      name:
+        str_replace:
+          template: $prefix-$random
+          params:
+            $prefix: { get_param: app_name }
+            $random: { get_resource: random_string }
+      flavor: {get_param: instance_flavor}
+      key_name: {get_param: key_name}
+      metadata: {get_param: metadata}
+      networks:
+        - port: { get_resource: port }
+      user_data:
+        str_replace:
+          template: |
+            #!/bin/bash
+            export http_proxy=http://$proxy:$proxy_port/
+            apt update
+            apt install nginx -y
+            $wc_notify --data-binary '{"status": "SUCCESS"}'
+          params:
+            $proxy: {get_param: proxy}
+            $proxy_port: {get_param: proxy_port}
+            $wc_notify: { get_attr: ['wait_handle', 'curl_cli'] }
+  port:
+    type: OS::Neutron::Port
+    properties:
+      network: {get_param: server_network}
+      security_groups:
+        - default
+
+  floating_ip:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network: {get_param: external_network}
+
+  floating_ip_assoc:
+    type: OS::Neutron::FloatingIPAssociation
+    properties:
+      floatingip_id: { get_resource: floating_ip }
+      port_id: { get_resource: port }
+
+  member:
+    type: OS::Neutron::LBaaS::PoolMember
+    properties:
+      pool: { get_param: pool_id }
+      address: { get_attr: [server, first_address] }
+      protocol_port: { get_param: server_port }
+      subnet: { get_param: server_subnet }
