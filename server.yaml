@@ -51,11 +51,11 @@ parameters:
   proxy:
     type: string
     description: LB Service Pool
-    default: 10.157.203.135
+    default: 10.157.240.254
   proxy_port:
     type: string
     description: LB Service Pool
-    default: 3128
+    default: 8678
 
 resources:
   random_string:
