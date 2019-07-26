@@ -68,9 +68,9 @@ parameters:
     type: boolean
     default: false
     
-  environment:
-    type: string
-    default: development  
+#   environment:
+#     type: string
+#     default: development  
 
 resources:
   security_group:
@@ -122,8 +122,8 @@ resources:
         - device_name: vda
           volume_id: { get_resource: bootable_volume }
           delete_on_termination: True
-    metadata:
-      env: local
+#     metadata:
+#       env: local
 
 
       user_data:
