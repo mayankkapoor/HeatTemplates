@@ -1,6 +1,6 @@
 heat_template_version: 2017-02-24
 description: >
-  This template deploys MongoDB replica set on Ubuntu for JAWS 
+  This template deploys MongoDB replica set on Ubuntu for JAWS
 parameters:
   image:
     type: string
@@ -79,20 +79,20 @@ resources:
       properties:
           length: 4
           sequence: lowercase
-   random_string2:
+  random_string2:
       type: OS::Heat::RandomString
       properties:
           length: 4
           sequence: lowercase
-   random_string3:
+  random_string3:
       type: OS::Heat::RandomString
       properties:
           length: 4
           sequence: lowercase
-          
+
   mongo1_name:
       type: OS::Heat::Value
-      depends_on: random_string
+      depends_on: random_string1
       properties:
           value:
               str_replace:
@@ -103,7 +103,7 @@ resources:
 
   mongo2_name:
       type: OS::Heat::Value
-      depends_on: random_string
+      depends_on: random_string2
       properties:
           value:
               str_replace:
@@ -111,10 +111,9 @@ resources:
                   params:
                       $prefix: { get_param: stack_name }
                       $random: { get_resource: random_string2 }
-
   mongo3_name:
       type: OS::Heat::Value
-      depends_on: random_string
+      depends_on: random_string3
       properties:
           value:
               str_replace:
@@ -129,15 +128,22 @@ resources:
           length: 10
           sequence: lowercase
 
+  random_string_sg:
+      type: OS::Heat::RandomString
+      properties:
+          length: 4
+          sequence: lowercase
+
   security_group:
       type: OS::Neutron::SecurityGroup
-      depends_on: random_string
+      depends_on: random_string1
       properties:
           name:
               str_replace:
                   template: $prefix-security-group
                   params:
-                      $prefix: { get_attr: [prefix_random, value] }
+                      $prefix: { get_param: stack_name }
+                      $random: { get_resource: random_string_sg }
           rules:
               - remote_mode: remote_group_id
                 direction: ingress
@@ -162,7 +168,6 @@ resources:
             - subnet_id: { get_param: subnet_name }
           security_groups:
             - { get_resource: security_group }
-
   port2:
       type: OS::Neutron::Port
       depends_on: security_group
@@ -204,8 +209,6 @@ resources:
       properties:
           floating_network_id: { get_param: public_network_id }
           port_id: { get_resource: port3 }
-
-
   mongo1:
     type: OS::Nova::Server
     depends_on: [ port1, mongo2, mongo3 ]
@@ -245,7 +248,7 @@ resources:
 
             curl -o /etc/apt/sources.list https://raw.githubusercontent.com/Mohamedji/DBHeatTemplate/master/sources.list
 
-            apt-get update 
+            apt-get update
             # Snoopy install
             if [ $commandLog = True ]
             then
@@ -260,6 +263,7 @@ resources:
             else
               echo "snoopy not installed"
             fi
+
 
             # Installing Docker
             apt-get install apt-transport-https ca-certificates curl software-properties-common -y
@@ -298,10 +302,10 @@ resources:
             mydb = client.$db
             item = { "Name" : "Test Record" }
             record = mydb.item
-            print record.insert_one(item)    
+            print record.insert_one(item)
             EOF
             chmod +x /tmp/config.py
-            python /tmp/config.py >> /tmp/config_output 
+            python /tmp/config.py >> /tmp/config_output
             unset http_proxy https_proxy
             docker -H $ip2 stop mongo-node
             docker -H $ip3 stop mongo-node
@@ -312,7 +316,7 @@ resources:
             docker run --name mongo-node --restart always  -d  -v ~/mongo:/data/db -v /root/keys/:/opt/mongo  -p 27017:27017 mongo --auth --keyFile /opt/mongo/mongo-keyfile --replSet "$rs"
             sleep 2
             docker -H $ip2 run --name mongo-node --restart always -d -v ~/mongo:/data/db -v /root/keys/:/opt/mongo  -p 27017:27017 mongo --auth --keyFile /opt/mongo/mongo-keyfile --replSet "$rs"
-            docker -H $ip3 run --name mongo-node --restart always -d -v ~/mongo:/data/db -v /root/keys/:/opt/mongo  -p 27017:27017 mongo --auth --keyFile /opt/mongo/mongo-keyfile --replSet "$rs" 
+            docker -H $ip3 run --name mongo-node --restart always -d -v ~/mongo:/data/db -v /root/keys/:/opt/mongo  -p 27017:27017 mongo --auth --keyFile /opt/mongo/mongo-keyfile --replSet "$rs"
 
             export http_proxy=http://$proxy_host:$proxy_port
             export https_proxy=http://$proxy_host:$proxy_port
@@ -343,7 +347,6 @@ resources:
             echo "  servers = ['mongodb://admin:@dmin@localhost:27017']" >> /etc/telegraf/telegraf.conf
             systemctl enable telegraf
             systemctl restart telegraf
-
 
   mongo2:
     type: OS::Nova::Server
@@ -379,7 +382,7 @@ resources:
 
             curl -o /etc/apt/sources.list https://raw.githubusercontent.com/Mohamedji/DBHeatTemplate/master/sources.list
 
-            apt-get update 
+            apt-get update
             # Snoopy install
             if [ $commandLog = True ]
             then
@@ -394,7 +397,6 @@ resources:
             else
               echo "snoopy not installed"
             fi
-
             # Installing Docker
             apt-get install apt-transport-https ca-certificates curl software-properties-common -y
             curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
@@ -415,7 +417,7 @@ resources:
             EOF
             systemctl daemon-reload && systemctl restart docker
             systemctl enable docker
-            
+
             mkdir /root/keys/
             echo $key >> /root/keys/mongo-keyfile
             chmod 400 /root/keys/mongo-keyfile
@@ -449,7 +451,6 @@ resources:
             echo "  servers = ['mongodb://admin:@dmin@localhost:27017']" >> /etc/telegraf/telegraf.conf
             systemctl enable telegraf
             systemctl restart telegraf
-
   mongo3:
     type: OS::Nova::Server
     depends_on: port3
@@ -484,7 +485,7 @@ resources:
 
             curl -o /etc/apt/sources.list https://raw.githubusercontent.com/Mohamedji/DBHeatTemplate/master/sources.list
 
-            apt-get update 
+            apt-get update
             # Snoopy install
             if [ $commandLog = True ]
             then
@@ -499,7 +500,6 @@ resources:
             else
               echo "snoopy not installed"
             fi
-
             # Installing Docker
             apt-get install apt-transport-https ca-certificates curl software-properties-common -y
             curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
@@ -554,7 +554,6 @@ resources:
             systemctl enable telegraf
             systemctl restart telegraf
 
-
 outputs:
   mongodb_connection_url:
     description: MongoDB cluster connection url
@@ -566,5 +565,6 @@ outputs:
           pass: { get_param: db_pass }
           host1: { get_attr: [mongo1_floatingip, floating_ip_address] }
           host2: { get_attr: [mongo2_floatingip, floating_ip_address] }
-          host3: { get_attr: [mongo3_floatingip, floating_ip_address] }    
+          host3: { get_attr: [mongo3_floatingip, floating_ip_address] }
 
+    
