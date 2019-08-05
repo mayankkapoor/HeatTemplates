@@ -213,7 +213,7 @@ resources:
     type: OS::Nova::Server
     depends_on: [ port1, mongo2, mongo3 ]
     properties:
-      name: { get_resource: mongo1_name }
+      name: { get_attr: [mongo1_name, value] }
       flavor: { get_param: flavor }
       key_name: { get_param: key }
       availability_zone: { get_param: az1 }
@@ -352,7 +352,7 @@ resources:
     type: OS::Nova::Server
     depends_on: port2
     properties:
-      name: { get_resource: mongo2_name }
+      name: { get_attr: [mongo2_name, value] }
       flavor: { get_param: flavor }
       key_name: { get_param: key }
       availability_zone: { get_param: az2 }
@@ -455,7 +455,7 @@ resources:
     type: OS::Nova::Server
     depends_on: port3
     properties:
-      name: { get_resource: mongo3_name }
+      name: { get_attr: [mongo3_name, value] }
       flavor: { get_param: flavor }
       key_name: { get_param: key }
       availability_zone: { get_param: az3 }
