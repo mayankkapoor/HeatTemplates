@@ -225,7 +225,7 @@ resources:
       networks:
         - port: { get_resource: port1 }
       user_data_format: RAW
-      metadata: {db_instance: true}}
+      metadata: [db_instance: true]
       user_data:
         str_replace:
           params:
