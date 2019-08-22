@@ -32,7 +32,7 @@ parameters:
   volume_size:
     type: number
     description: Database volume size
-    default: 50
+    default: 20
   proxy_host:
     type: string
     description: Proxy host for this environment
@@ -50,10 +50,6 @@ parameters:
     type: string
     description: Database to be created
     default: app
-  replica_set:
-    type: string
-    description: Replica Set name
-    default: rs0
   commandLog:
     type: boolean
     default: True
@@ -234,7 +230,6 @@ resources:
             $proxy_port: { get_param: proxy_port }
             $db_pass: { get_param: db_pass }
             $db: { get_param: custom_db }
-            $rs: { get_param: replica_set }
             $ip1: { get_attr: [mongo1_floatingip, floating_ip_address] }
             $ip2: { get_attr: [mongo2_floatingip, floating_ip_address] }
             $ip3: { get_attr: [mongo3_floatingip, floating_ip_address] }
@@ -288,14 +283,14 @@ resources:
             chown 999:999 /root/keys/mongo-keyfile
 
             docker pull mongo
-            docker run --name mongo-node -d -v ~/mongo:/data/db -p 27017:27017 mongo --replSet "$rs"
+            docker run --name mongo-node -d -v ~/mongo:/data/db -p 27017:27017 mongo --replSet "rs0"
             cat << EOF > /tmp/config.py
 
             #!/usr/bin/python
             import pymongo
             import time
             client = pymongo.MongoClient('mongodb://localhost:27017/')
-            config = {"_id":"$rs","members":[{"_id":0,"host": "$ip1:27017" },{"_id":1,"host": "$ip2:27017" },{"_id":2,"host": "$ip3:27017" }]}
+            config = {"_id":"rs0","members":[{"_id":0,"host": "$ip1:27017" },{"_id":1,"host": "$ip2:27017" },{"_id":2,"host": "$ip3:27017" }]}
             client.admin.command("replSetInitiate", config)
             time.sleep(20)
             print client.admin.command("createUser", "root", pwd="$db_pass", roles=["root"])
@@ -314,10 +309,10 @@ resources:
             docker -H $ip2 rm -f mongo-node
             docker -H $ip3 rm -f mongo-node
             docker rm -f mongo-node
-            docker run --name mongo-node --restart always  -d  -v ~/mongo:/data/db -v /root/keys/:/opt/mongo  -p 27017:27017 mongo --auth --keyFile /opt/mongo/mongo-keyfile --replSet "$rs"
+            docker run --name mongo-node --restart always  -d  -v ~/mongo:/data/db -v /root/keys/:/opt/mongo  -p 27017:27017 mongo --auth --keyFile /opt/mongo/mongo-keyfile --replSet "rs0"
             sleep 2
-            docker -H $ip2 run --name mongo-node --restart always -d -v ~/mongo:/data/db -v /root/keys/:/opt/mongo  -p 27017:27017 mongo --auth --keyFile /opt/mongo/mongo-keyfile --replSet "$rs"
-            docker -H $ip3 run --name mongo-node --restart always -d -v ~/mongo:/data/db -v /root/keys/:/opt/mongo  -p 27017:27017 mongo --auth --keyFile /opt/mongo/mongo-keyfile --replSet "$rs"
+            docker -H $ip2 run --name mongo-node --restart always -d -v ~/mongo:/data/db -v /root/keys/:/opt/mongo  -p 27017:27017 mongo --auth --keyFile /opt/mongo/mongo-keyfile --replSet "rs0"
+            docker -H $ip3 run --name mongo-node --restart always -d -v ~/mongo:/data/db -v /root/keys/:/opt/mongo  -p 27017:27017 mongo --auth --keyFile /opt/mongo/mongo-keyfile --replSet "rs0"
 
             export http_proxy=http://$proxy_host:$proxy_port
             export https_proxy=http://$proxy_host:$proxy_port
@@ -370,7 +365,6 @@ resources:
         str_replace:
           params:
             $key: { get_resource: random_string_mongo }
-            $rs: { get_param: replica_set }
             $proxy_host: { get_param: proxy_host }
             $proxy_port: { get_param: proxy_port }
           template: |
@@ -424,7 +418,7 @@ resources:
             echo $key >> /root/keys/mongo-keyfile
             chmod 400 /root/keys/mongo-keyfile
             chown 999:999 /root/keys/mongo-keyfile
-            docker run --name mongo-node -d -v /etc/hosts:/etc/hosts -v ~/mongo:/data/db -p 27017:27017 mongo --replSet "$rs"
+            docker run --name mongo-node -d -v /etc/hosts:/etc/hosts -v ~/mongo:/data/db -p 27017:27017 mongo --replSet "rs0"
 
 
             # Installing Telegraf agent
@@ -474,7 +468,6 @@ resources:
         str_replace:
           params:
             $key: { get_resource: random_string_mongo }
-            $rs: { get_param: replica_set }
             $proxy_host: { get_param: proxy_host }
             $proxy_port: { get_param: proxy_port }
           template: |
@@ -528,7 +521,7 @@ resources:
             echo $key >> /root/keys/mongo-keyfile
             chmod 400 /root/keys/mongo-keyfile
             chown 999:999 /root/keys/mongo-keyfile
-            docker run --name mongo-node -d -v /etc/hosts:/etc/hosts -v ~/mongo:/data/db -p 27017:27017 mongo --replSet "$rs"
+            docker run --name mongo-node -d -v /etc/hosts:/etc/hosts -v ~/mongo:/data/db -p 27017:27017 mongo --replSet "rs0"
 
             # Installing Telegraf agent
             curl -L -O https://dl.influxdata.com/telegraf/releases/telegraf_1.10.3-1_amd64.deb
@@ -562,9 +555,8 @@ outputs:
     description: MongoDB cluster connection url
     value:
       str_replace:
-        template: mongodb://root:pass@host1:27017,host2:27017,host3:27017/?replicaSet=rs
+        template: mongodb://root:pass@host1:27017,host2:27017,host3:27017/?replicaSet=rs0
         params:
-          rs: { get_param: replica_set }
           pass: { get_param: db_pass }
           host1: { get_attr: [mongo1_floatingip, floating_ip_address] }
           host2: { get_attr: [mongo2_floatingip, floating_ip_address] }
