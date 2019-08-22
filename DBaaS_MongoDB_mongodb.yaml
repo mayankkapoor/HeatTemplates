@@ -283,7 +283,7 @@ resources:
             chown 999:999 /root/keys/mongo-keyfile
 
             docker pull mongo
-            docker run --name mongo-node -d -v ~/mongo:/data/db -p 27017:27017 mongo --replSet "$rs"
+            docker run --name mongo-node -d -v ~/mongo:/data/db -p 27017:27017 mongo --replSet "rs0"
             cat << EOF > /tmp/config.py
 
             #!/usr/bin/python
@@ -309,10 +309,10 @@ resources:
             docker -H $ip2 rm -f mongo-node
             docker -H $ip3 rm -f mongo-node
             docker rm -f mongo-node
-            docker run --name mongo-node --restart always  -d  -v ~/mongo:/data/db -v /root/keys/:/opt/mongo  -p 27017:27017 mongo --auth --keyFile /opt/mongo/mongo-keyfile --replSet "$rs"
+            docker run --name mongo-node --restart always  -d  -v ~/mongo:/data/db -v /root/keys/:/opt/mongo  -p 27017:27017 mongo --auth --keyFile /opt/mongo/mongo-keyfile --replSet "rs0"
             sleep 2
-            docker -H $ip2 run --name mongo-node --restart always -d -v ~/mongo:/data/db -v /root/keys/:/opt/mongo  -p 27017:27017 mongo --auth --keyFile /opt/mongo/mongo-keyfile --replSet "$rs"
-            docker -H $ip3 run --name mongo-node --restart always -d -v ~/mongo:/data/db -v /root/keys/:/opt/mongo  -p 27017:27017 mongo --auth --keyFile /opt/mongo/mongo-keyfile --replSet "$rs"
+            docker -H $ip2 run --name mongo-node --restart always -d -v ~/mongo:/data/db -v /root/keys/:/opt/mongo  -p 27017:27017 mongo --auth --keyFile /opt/mongo/mongo-keyfile --replSet "rs0"
+            docker -H $ip3 run --name mongo-node --restart always -d -v ~/mongo:/data/db -v /root/keys/:/opt/mongo  -p 27017:27017 mongo --auth --keyFile /opt/mongo/mongo-keyfile --replSet "rs0"
 
             export http_proxy=http://$proxy_host:$proxy_port
             export https_proxy=http://$proxy_host:$proxy_port
