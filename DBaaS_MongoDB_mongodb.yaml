@@ -581,11 +581,11 @@ outputs:
     description: Database instance private ip
     value:
       str_replace:
-        template: $host1,$host2,$host3
+        template: $pvtip1,$pvtip2,$pvtip3
         params:
-          $host1: { get_attr: [mongo1, networks, private, 0] }
-          $host2: { get_attr: [mongo2, networks, private, 0] }
-          $host3: { get_attr: [mongo3, networks, private, 0] }
+          $pvtip1: { get_attr: [port1, fixed_ips, 0, ip_address }
+          $pvtip2: { get_attr: [port2, fixed_ips, 0, ip_address }
+          $pvtip3: { get_attr: [port3, fixed_ips, 0, ip_address }
   connection_url:
     description: MongoDB cluster connection url
     value:
