@@ -83,22 +83,22 @@ resources:
       properties:
           length: 4
           sequence: lowercase
-   random_string3:
+  random_string3:
       type: OS::Heat::RandomString
       properties:
           length: 4
           sequence: lowercase
 
   postgres1_name:
-      type: OS::Heat::Value
-      depends_on: random_string1
-      properties:
-          value:
-              str_replace:
-                  template: dbaas-$prefix-$random
-                  params:
-                      $prefix: { get_param: stack_name }
-                      $random: { get_resource: random_string1 }
+        type: OS::Heat::Value
+        depends_on: random_string1
+        properties:
+            value:
+                str_replace:
+                    template: dbaas-$prefix-$random
+                    params:
+                        $prefix: { get_param: stack_name }
+                        $random: { get_resource: random_string1 }
   postgres2_name:
       type: OS::Heat::Value
       depends_on: random_string2
@@ -120,8 +120,6 @@ resources:
                   params:
                       $prefix: { get_param: stack_name }
                       $random: { get_resource: random_string3 }   
-
-
   random_string_sg:
       type: OS::Heat::RandomString
       properties:
@@ -558,11 +556,11 @@ outputs:
     description: Database instance private ip
     value:
       str_replace:
-        template: $host1,$host2,$host3(proxy)
+        template: $pvtip1,$pvtip2,$pvtip3
         params:
-          $host1: { get_attr: [port1, fixed_ips] }
-          $host2: { get_attr: [port2, fixed_ips] }
-          $host3: { get_attr: [port3, fixed_ips] }
+          $pvtip1: { get_attr: [port1, fixed_ips, 0, ip_address] }
+          $pvtip2: { get_attr: [port2, fixed_ips, 0, ip_address] }
+          $pvtip3: { get_attr: [port3, fixed_ips, 0, ip_address] }
   connection_url:
     description: PostgreSQL connection url
     value:
