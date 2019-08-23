@@ -74,134 +74,136 @@ parameters:
 
 resources:
   random_string1:
-      type: OS::Heat::RandomString
-      properties:
-          length: 4
-          sequence: lowercase       
+    type: OS::Heat::RandomString
+    properties:
+      length: 4
+      sequence: lowercase
+           
   random_string2:
-      type: OS::Heat::RandomString
-      properties:
-          length: 4
-          sequence: lowercase
+    type: OS::Heat::RandomString
+    properties:
+      length: 4
+      sequence: lowercase
   random_string3:
-      type: OS::Heat::RandomString
-      properties:
-          length: 4
-          sequence: lowercase
+    type: OS::Heat::RandomString
+    properties:
+      length: 4
+      sequence: lowercase
 
   postgres1_name:
-        type: OS::Heat::Value
-        depends_on: random_string1
-        properties:
-            value:
-                str_replace:
-                    template: dbaas-$prefix-$random
-                    params:
-                        $prefix: { get_param: stack_name }
-                        $random: { get_resource: random_string1 }
+    type: OS::Heat::Value
+    depends_on: random_string1
+    properties:
+      value:
+        str_replace:
+          template: dbaas-$prefix-$random
+          params:
+            $prefix: { get_param: stack_name }
+            $random: { get_resource: random_string1 }
   postgres2_name:
-      type: OS::Heat::Value
-      depends_on: random_string2
-      properties:
-          value:
-              str_replace:
-                  template: dbaas-$prefix-$random
-                  params:
-                      $prefix: { get_param: stack_name }
-                      $random: { get_resource: random_string2 }  
-  
+    type: OS::Heat::Value
+    depends_on: random_string2
+    properties:
+      value:
+        str_replace:
+          template: dbaas-$prefix-$random
+          params:
+            $prefix: { get_param: stack_name }
+            $random: { get_resource: random_string2 }
   proxy_name:
-      type: OS::Heat::Value
-      depends_on: random_string3
-      properties:
-          value:
-              str_replace:
-                  template: dbaas-$prefix-$random
-                  params:
-                      $prefix: { get_param: stack_name }
-                      $random: { get_resource: random_string3 }   
+    type: OS::Heat::Value
+    depends_on: random_string3
+    properties:
+      value:
+        str_replace:
+          template: dbaas-$prefix-$random
+          params:
+            $prefix: { get_param: stack_name }
+            $random: { get_resource: random_string3 }
+  
   random_string_sg:
-      type: OS::Heat::RandomString
-      properties:
-          length: 4
-          sequence: lowercase
+    type: OS::Heat::RandomString
+    properties:
+      length: 4
+      sequence: lowercase
 
   security_group:
-      type: OS::Neutron::SecurityGroup
-      depends_on: random_string1
-      properties:
-          name:
-              str_replace:
-                  template: $prefix-security-group
-                  params:
-                      $prefix: { get_param: stack_name }
-                      $random: { get_resource: random_string_sg }
-          rules:
-              - remote_mode: remote_group_id
-                direction: ingress
-              - remote_mode: remote_group_id
-                direction: egress
-              - direction: egress
-              - protocol: icmp
-              - port_range_min: 22
-                port_range_max: 22
-                protocol: tcp
-              - port_range_min: 5432
-                port_range_max: 5432
-                protocol: tcp
+    type: OS::Neutron::SecurityGroup
+    depends_on: random_string1
+    properties:
+      name:
+        str_replace:
+          template: $prefix-security-group
+            params:
+              $prefix: { get_param: stack_name }
+              $random: { get_resource: random_string_sg }
+      rules:
+        - remote_mode: remote_group_id
+          direction: ingress
+        - remote_mode: remote_group_id
+          direction: egress
+        - direction: egress
+        - protocol: icmp
+        - port_range_min: 22
+          port_range_max: 22
+          protocol: tcp
+        - port_range_min: 5432
+          port_range_max: 5432
+          protocol: tcp
 
   port1:
-      type: OS::Neutron::Port
-      depends_on: security_group
-      properties:
-          admin_state_up: true
-          network: { get_param: network_name }
-          fixed_ips: 
-            - subnet_id: { get_param: subnet_name }
-          security_groups: 
-            - { get_resource: security_group }
+    type: OS::Neutron::Port
+    depends_on: security_group
+    properties:
+      admin_state_up: true
+      network: { get_param: network_name }
+      fixed_ips: 
+        - subnet_id: { get_param: subnet_name }
+      security_groups: 
+        - { get_resource: security_group }
 
   port2:
-      type: OS::Neutron::Port
-      depends_on: security_group 
-      properties:
-          admin_state_up: true
-          network: { get_param: network_name }
-          fixed_ips:
-            - subnet_id: { get_param: subnet_name }
-          security_groups:
-            - { get_resource: security_group }
+    type: OS::Neutron::Port
+    depends_on: security_group
+    properties:
+      admin_state_up: true
+      network: { get_param: network_name }
+      fixed_ips: 
+        - subnet_id: { get_param: subnet_name }
+      security_groups: 
+        - { get_resource: security_group }
+
   port3:
-      type: OS::Neutron::Port
-      depends_on: security_group 
-      properties:
-          admin_state_up: true
-          network: { get_param: network_name }
-          fixed_ips: 
-            - subnet_id: { get_param: subnet_name }
-          security_groups:
-            - { get_resource: security_group }
+    type: OS::Neutron::Port
+    depends_on: security_group
+    properties:
+      admin_state_up: true
+      network: { get_param: network_name }
+      fixed_ips: 
+        - subnet_id: { get_param: subnet_name }
+      security_groups: 
+        - { get_resource: security_group }
 
   postgres1_floatingip:
-      type: OS::Neutron::FloatingIP
-      depends_on: port1
-      properties:
-          floating_network_id: { get_param: public_network_id }
-          port_id: { get_resource: port1 }
+    type: OS::Neutron::FloatingIP
+    depends_on: port1
+    properties:
+      floating_network_id: { get_param: public_network_id }
+      port_id: { get_resource: port1 }
 
   postgres2_floatingip:
-      type: OS::Neutron::FloatingIP
-      depends_on: port2
-      properties:
-          floating_network_id: { get_param: public_network_id }
-          port_id: { get_resource: port2 }
+    type: OS::Neutron::FloatingIP
+    depends_on: port2
+    properties:
+      floating_network_id: { get_param: public_network_id }
+      port_id: { get_resource: port2 }
 
   proxy_floatingip:
-      type: OS::Neutron::FloatingIP
-      depends_on: port3
-      properties:
-          floating_network_id: { get_param: public_network_id }
-          port_id: { get_resource: port3 }
+    type: OS::Neutron::FloatingIP
+    depends_on: port3
+    properties:
+      floating_network_id: { get_param: public_network_id }
+      port_id: { get_resource: port3 }
 
 
   postgres1:
