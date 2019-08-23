@@ -136,7 +136,7 @@ resources:
       properties:
           name:
               str_replace:
-                  template: $prefix-security-group
+                  template: $prefix-$random
                   params:
                       $prefix: { get_param: stack_name }
                       $random: { get_resource: random_string_sg }
