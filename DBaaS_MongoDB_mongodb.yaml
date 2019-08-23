@@ -583,9 +583,9 @@ outputs:
       str_replace:
         template: $pvtip1,$pvtip2,$pvtip3
         params:
-          $pvtip1: { get_attr: [port1, fixed_ips, 0, ip_address }
-          $pvtip2: { get_attr: [port2, fixed_ips, 0, ip_address }
-          $pvtip3: { get_attr: [port3, fixed_ips, 0, ip_address }
+          $pvtip1: { get_attr: [port1, fixed_ips, 0, ip_address] }
+          $pvtip2: { get_attr: [port2, fixed_ips, 0, ip_address] }
+          $pvtip3: { get_attr: [port3, fixed_ips, 0, ip_address] }
   connection_url:
     description: MongoDB cluster connection url
     value:
