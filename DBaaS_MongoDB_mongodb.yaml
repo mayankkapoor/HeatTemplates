@@ -551,6 +551,39 @@ resources:
             systemctl restart telegraf
 
 outputs:
+  db_engine: 
+    description: Database engine name
+    value: MongoDB
+  keypair: 
+    description: Keypair to connect to Database instances
+    value: { get_param: db_pass }
+  flavor: 
+    description: Database instance flavor
+    value: { get_param: flavor }
+  network_name: 
+    description: Database network 
+    value: { get_param: network_name }
+  subnet_name: 
+    description: Database subnet
+    value: { get_param: subnet_name }
+  nodes_pubip: 
+    description: Database instance public ip
+    value:
+      str_replace:
+        template: $host1,$host2,$host3
+        params:
+          $host1: { get_attr: [mongo1_floatingip, floating_ip_address] }
+          $host2: { get_attr: [mongo2_floatingip, floating_ip_address] }
+          $host3: { get_attr: [mongo3_floatingip, floating_ip_address] }
+  nodes_pvtip: 
+    description: Database instance private ip
+    value:
+      str_replace:
+        template: $host1,$host2,$host3
+        params:
+          $host1: { get_attr: [port1, fixed_ips] }
+          $host2: { get_attr: [port2, fixed_ips] }
+          $host3: { get_attr: [port3, fixed_ips] }
   mongodb_connection_url:
     description: MongoDB cluster connection url
     value:
