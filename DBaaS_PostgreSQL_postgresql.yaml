@@ -20,10 +20,10 @@ parameters:
   public_network_id:
     type: string
     default: non-prod2
-  resource_prefix:
+  stack_name:
     type: string
     description: Prefix to add to all resources
-    default: postgre
+    default: postgres
   network_name:
     type: string
     label: private network to be used
@@ -32,15 +32,10 @@ parameters:
     type: string
     label: private network's subnet to be used
     default: mj-private-subnet
-  dns_nameservers:
-    type: comma_delimited_list
-    label: DNS Nameservers
-    description: DNS nameservers to use on nodes
-    default: 8.8.8.8,10.137.2.5,10.137.224.5
   volume_size:
     type: number
     description: Database volume size
-    default: 50
+    default: 20
   proxy_host:
     type: string
     description: Proxy host for this environment
@@ -78,22 +73,53 @@ parameters:
     default: JMNG-PE3-PROD3
 
 resources:
-  random_string:
+  random_string1:
+      type: OS::Heat::RandomString
+      properties:
+          length: 4
+          sequence: lowercase       
+  random_string2:
+      type: OS::Heat::RandomString
+      properties:
+          length: 4
+          sequence: lowercase
+   random_string3:
       type: OS::Heat::RandomString
       properties:
           length: 4
           sequence: lowercase
 
-  prefix_random:
+  postgres1_name:
       type: OS::Heat::Value
-      depends_on: random_string
+      depends_on: random_string1
       properties:
           value:
               str_replace:
-                  template: $prefix-$random
+                  template: dbaas-$prefix-$random
                   params:
-                      $prefix: { get_param: resource_prefix }
-                      $random: { get_resource: random_string }
+                      $prefix: { get_param: stack_name }
+                      $random: { get_resource: random_string1 }
+  postgres2_name:
+      type: OS::Heat::Value
+      depends_on: random_string2
+      properties:
+          value:
+              str_replace:
+                  template: dbaas-$prefix-$random
+                  params:
+                      $prefix: { get_param: stack_name }
+                      $random: { get_resource: random_string2 }  
+  
+  postgres3_name:
+      type: OS::Heat::Value
+      depends_on: random_string3
+      properties:
+          value:
+              str_replace:
+                  template: dbaas-$prefix-$random
+                  params:
+                      $prefix: { get_param: stack_name }
+                      $random: { get_resource: random_string3 }   
 
 
   security_group:
