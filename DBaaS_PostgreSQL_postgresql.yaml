@@ -133,10 +133,10 @@ resources:
     properties:
       name:
         str_replace:
-          template: $prefix-security-group
-            params:
-              $prefix: { get_param: stack_name }
-              $random: { get_resource: random_string_sg }
+          template: $prefix-$random
+          params:
+            $prefix: { get_param: stack_name }
+            $random: { get_resource: random_string_sg }
       rules:
         - remote_mode: remote_group_id
           direction: ingress
@@ -320,7 +320,7 @@ resources:
 
   postgres2:
     type: OS::Nova::Server
-    depends_on: postgre_instance1
+    depends_on: postgres1
     properties:
       name: { get_attr: [postgres2_name, value] }
       flavor: { get_param: flavor }
@@ -553,7 +553,7 @@ outputs:
         params:
           $host1: { get_attr: [postgres1_floatingip, floating_ip_address] }
           $host2: { get_attr: [postgres2_floatingip, floating_ip_address] }
-          $host3: { get_attr: [proxy_floatinip, floating_ip_address] }
+          $host3: { get_attr: [proxy_floatingip, floating_ip_address] }
   nodes_pvtip: 
     description: Database instance private ip
     value:
