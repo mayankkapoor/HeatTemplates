@@ -110,7 +110,7 @@ resources:
                       $prefix: { get_param: stack_name }
                       $random: { get_resource: random_string2 }  
   
-  postgres3_name:
+  proxy_name:
       type: OS::Heat::Value
       depends_on: random_string3
       properties:
@@ -122,15 +122,22 @@ resources:
                       $random: { get_resource: random_string3 }   
 
 
+  random_string_sg:
+      type: OS::Heat::RandomString
+      properties:
+          length: 4
+          sequence: lowercase
+
   security_group:
       type: OS::Neutron::SecurityGroup
-      depends_on: random_string
+      depends_on: random_string1
       properties:
           name:
               str_replace:
                   template: $prefix-security-group
                   params:
-                      $prefix: { get_attr: [prefix_random, value] }
+                      $prefix: { get_param: stack_name }
+                      $random: { get_resource: random_string_sg }
           rules:
               - remote_mode: remote_group_id
                 direction: ingress
@@ -177,21 +184,21 @@ resources:
           security_groups:
             - { get_resource: security_group }
 
-  instance1_floatingip:
+  postgres1_floatingip:
       type: OS::Neutron::FloatingIP
       depends_on: port1
       properties:
           floating_network_id: { get_param: public_network_id }
           port_id: { get_resource: port1 }
 
-  instance2_floatingip:
+  postgres2_floatingip:
       type: OS::Neutron::FloatingIP
       depends_on: port2
       properties:
           floating_network_id: { get_param: public_network_id }
           port_id: { get_resource: port2 }
 
-  instance3_floatingip:
+  proxy_floatingip:
       type: OS::Neutron::FloatingIP
       depends_on: port3
       properties:
@@ -199,10 +206,11 @@ resources:
           port_id: { get_resource: port3 }
 
 
-  postgre_instance1:
+  postgres1:
     type: OS::Nova::Server
     depends_on: port1 
     properties:
+      name: { get_attr: [postgres1_name, value] }
       flavor: { get_param: flavor }
       key_name: { get_param: key }
       availability_zone: { get_param: az1 }
@@ -214,6 +222,7 @@ resources:
       networks:
         - port: { get_resource: port1 }
       user_data_format: RAW
+      metadata: { db_instance: true }
       user_data:
         str_replace:
           params:
@@ -222,6 +231,7 @@ resources:
             $db_pass: { get_param: db_pass }
             $sync: { get_param: sync }
             $commandLog: { get_param: commandLog }
+            $isprodvm: { get_param: isprodvm}
             $db: { get_param: custom_db }
             $ip1: { get_attr: [ port1, fixed_ips, 0, ip_address ]}
             $ip2: { get_attr: [ port2, fixed_ips, 0, ip_address ]}
@@ -308,10 +318,11 @@ resources:
 
 
 
-  postgre_instance2:
+  postgres2:
     type: OS::Nova::Server
     depends_on: postgre_instance1
     properties:
+      name: { get_attr: [postgres2_name, value] }
       flavor: { get_param: flavor }
       key_name: { get_param: key }
       availability_zone: { get_param: az2 }
@@ -323,14 +334,16 @@ resources:
       networks:
         - port: { get_resource: port2 }
       user_data_format: RAW
+      metadata: { db_instance: true }
       user_data:
         str_replace:
           params:
             $proxy_host: { get_param: proxy_host }
             $proxy_port: { get_param: proxy_port }
-            $commandLog: { get_param: commandLog }
             $db_pass: { get_param: db_pass }
             $sync: { get_param: sync }
+            $commandLog: { get_param: commandLog }
+            $isprodvm: { get_param: isprodvm}
             $db: { get_param: custom_db }
             $ip1: { get_attr: [ port1, fixed_ips, 0, ip_address ]}
             $ip2: { get_attr: [ port2, fixed_ips, 0, ip_address ]}
@@ -432,6 +445,7 @@ resources:
     type: OS::Nova::Server
     depends_on: port3
     properties:
+      name: { get_attr: [proxy_name, value] }
       flavor: { get_param: flavor }
       key_name: { get_param: key }
       availability_zone: { get_param: az3 }
@@ -443,12 +457,14 @@ resources:
       networks:
         - port: { get_resource: port3 }
       user_data_format: RAW
+      metadata: { db_instance: true }
       user_data:
         str_replace:
           params:
             $proxy_host: { get_param: proxy_host }
             $proxy_port: { get_param: proxy_port }
             $commandLog: { get_param: commandLog }
+            $isprodvm: { get_param: isprodvm}
             $ip1: { get_attr: [ port1, fixed_ips, 0, ip_address ]}
             $ip2: { get_attr: [ port2, fixed_ips, 0, ip_address ]}
           template: |
@@ -514,11 +530,44 @@ resources:
             systemctl restart telegraf
 
 outputs:
-  postgresql_connection_url:
+  db_engine: 
+    description: Database engine name
+    value: Postgres
+  keypair: 
+    description: Keypair to connect to Database instances
+    value: { get_param: key }
+  flavor: 
+    description: Database instance flavor
+    value: { get_param: flavor }
+  network_name: 
+    description: Database network 
+    value: { get_param: network_name }
+  subnet_name: 
+    description: Database subnet
+    value: { get_param: subnet_name }
+  nodes_pubip: 
+    description: Database instance public ip
+    value:
+      str_replace:
+        template: $host1,$host2,$host3(proxy)
+        params:
+          $host1: { get_attr: [postgres1_floatingip, floating_ip_address] }
+          $host2: { get_attr: [postgres2_floatingip, floating_ip_address] }
+          $host3: { get_attr: [proxy_floatinip, floating_ip_address] }
+  nodes_pvtip: 
+    description: Database instance private ip
+    value:
+      str_replace:
+        template: $host1,$host2,$host3(proxy)
+        params:
+          $host1: { get_attr: [port1, fixed_ips] }
+          $host2: { get_attr: [port2, fixed_ips] }
+          $host3: { get_attr: [port3, fixed_ips] }
+  connection_url:
     description: PostgreSQL connection url
     value:
       str_replace:
-        template: postgresql://host3:5432/db
+        template: postgresql://$host3:5432/$db
         params:
-          host3: { get_attr: [instance3_floatingip, floating_ip_address] }
-          db: { get_param: custom_db }
+          $host3: { get_attr: [proxy_floatingip, floating_ip_address] }
+          $db: { get_param: custom_db }
