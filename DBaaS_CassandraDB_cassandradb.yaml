@@ -309,7 +309,7 @@ resources:
 
   cassandra2:
     type: OS::Nova::Server
-    depends_on: [ port2, cassandra_instance1 ]
+    depends_on: [ port2, cassandra1 ]
     properties:
       name: { get_attr: [cassandra2_name, value] }
       flavor: { get_param: flavor }
@@ -412,7 +412,7 @@ resources:
 
   cassandra3:
     type: OS::Nova::Server
-    depends_on: [ port3, cassandra_instance1 ]
+    depends_on: [ port3, cassandra1 ]
     properties:
       name: { get_attr: [cassandra1_name, value] }
       flavor: { get_param: flavor }
@@ -545,12 +545,12 @@ outputs:
           $pvtip2: { get_attr: [port2, fixed_ips, 0, ip_address] }
           $pvtip3: { get_attr: [port3, fixed_ips, 0, ip_address] }
   connection_url:
-    description: MongoDB cluster connection url
+    description: Cassandra cluster connection url
     value:
       str_replace:
         template: cassandra://root:$pass@$host1:7000,$host2:7000,$host3:7000
         params:
           $pass: { get_param: db_pass }
-          $host1: { get_attr: [mongo1_floatingip, floating_ip_address] }
-          $host2: { get_attr: [mongo2_floatingip, floating_ip_address] }
-          $host3: { get_attr: [mongo3_floatingip, floating_ip_address] }
+          $host1: { get_attr: [cassandra1_floatingip, floating_ip_address] }
+          $host2: { get_attr: [cassandra2_floatingip, floating_ip_address] }
+          $host3: { get_attr: [cassandra3_floatingip, floating_ip_address] }
