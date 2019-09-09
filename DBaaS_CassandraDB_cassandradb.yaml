@@ -284,7 +284,9 @@ resources:
             docker run --restart always -d --name=cassandra1 --hostname=cassandra1 -v "/etc/hosts:/etc/hosts" -v "/root/cassandra-data:/var/lib/cassandra" -v "/root/cassandra-config:/etc/cassandra/" -d -e "CASSANDRA_BROADCAST_ADDRESS=$ip1" -p 7000:7000 cassandra
             sleep 30
             docker exec -it cassandra1 sed -i 's/AllowAllAuthenticator/PasswordAuthenticator/g /etc/cassandra/cassandra.yaml'
-            docker restart cassandra1
+            docker rm -f cassandra1
+            docker run --restart always -d --name=cassandra1 --hostname=cassandra1 -v "/etc/hosts:/etc/hosts" -v "/root/cassandra-data:/var/lib/cassandra" -v "/root/cassandra-config:/etc/cassandra/" -d -e "CASSANDRA_BROADCAST_ADDRESS=$ip1" -p 7000:7000 cassandra
+            
             export http_proxy=http://$proxy_host:$proxy_port
             export https_proxy=http://$proxy_host:$proxy_port
 
