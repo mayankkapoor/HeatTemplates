@@ -41,7 +41,7 @@ seed_provider:
       parameters:
           # seeds is actually a comma-delimited list of addresses.
           # Ex: "<ip1>,<ip2>,<ip3>"
-          - seeds: "10.157.248.68"
+          - seeds: "master_ip"
 concurrent_reads: 32
 concurrent_writes: 32
 concurrent_counter_writes: 32
@@ -54,13 +54,13 @@ trickle_fsync_interval_in_kb: 10240
 storage_port: 7000
 ssl_storage_port: 7001
 listen_address: 172.17.0.2
-broadcast_address: 10.157.248.68
+broadcast_address: node_ip
 start_native_transport: true
 native_transport_port: 9042
 start_rpc: false
 rpc_address: 0.0.0.0
 rpc_port: 9160
-broadcast_rpc_address: 10.157.248.68
+broadcast_rpc_address: node_ip
 rpc_keepalive: true
 rpc_server_type: sync
 thrift_framed_transport_size_in_mb: 15
