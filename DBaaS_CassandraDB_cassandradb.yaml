@@ -1,4 +1,4 @@
-heat_template_version: 2017-02-24
+  heat_template_version: 2017-02-24
 description: >
   This template deploys CassandraDB cluster on Ubuntu for JAWS 
 parameters:
@@ -281,11 +281,7 @@ resources:
             
             mkdir -p /root/cassandra-data
             mkdir -p /root/cassandra-config
-            docker run --restart always -d --name=cassandra1 --hostname=cassandra1 -v "/etc/hosts:/etc/hosts" -v "/root/cassandra-data:/var/lib/cassandra" -v "/root/cassandra-config:/etc/cassandra/" -d -e "CASSANDRA_BROADCAST_ADDRESS=$ip1" -p 7000:7000 cassandra
-            sleep 30
-            docker exec -it cassandra1 sed -i 's/AllowAllAuthenticator/PasswordAuthenticator/g /etc/cassandra/cassandra.yaml'
-            docker rm -f cassandra1
-            docker run --restart always -d --name=cassandra1 --hostname=cassandra1 -v "/etc/hosts:/etc/hosts" -v "/root/cassandra-data:/var/lib/cassandra" -v "/root/cassandra-config:/etc/cassandra/" -d -e "CASSANDRA_BROADCAST_ADDRESS=$ip1" -p 7000:7000 cassandra
+            docker run --restart always -d --name=cassandra1 --hostname=cassandra1 -v "/etc/hosts:/etc/hosts" -v "/root/cassandra-data:/var/lib/cassandra" -d -e "CASSANDRA_BROADCAST_ADDRESS=$ip1" -p 7000:7000 cassandra
             
             export http_proxy=http://$proxy_host:$proxy_port
             export https_proxy=http://$proxy_host:$proxy_port
@@ -391,8 +387,6 @@ resources:
             docker pull cassandra 
             
             docker run --restart always -d --name=cassandra2 --hostname=cassandra2 -v "/etc/hosts:/etc/hosts" -v "cassandra-data:/var/lib/cassandra" -d -e "CASSANDRA_BROADCAST_ADDRESS=$ip2" -e "CASSANDRA_SEEDS=$ip1" -p 7000:7000 cassandra
-            #docker exec -it cassandra2 sed -i 's/AllowAllAuthenticator/PasswordAuthenticator/g /etc/cassandra/cassandra.yaml'
-            #docker restart cassandra2
             
             # Installing Telegraf agent
             curl -L -O https://dl.influxdata.com/telegraf/releases/telegraf_1.10.3-1_amd64.deb
@@ -496,8 +490,6 @@ resources:
             mkdir cassandra-data
             docker pull cassandra
             docker run --restart always -d --name=cassandra3 --hostname=cassandra3 -v "/etc/hosts:/etc/hosts" -v "cassandra-data:/var/lib/cassandra" -d -e "CASSANDRA_BROADCAST_ADDRESS=$ip3" -e "CASSANDRA_SEEDS=$ip1" -p 7000:7000 cassandra
-            #docker exec -it cassandra3 sed -i 's/AllowAllAuthenticator/PasswordAuthenticator/g /etc/cassandra/cassandra.yaml'
-            #docker restart cassandra3
             curl -L -O https://dl.influxdata.com/telegraf/releases/telegraf_1.10.3-1_amd64.deb
             dpkg -i telegraf_1.10.3-1_amd64.deb
 
