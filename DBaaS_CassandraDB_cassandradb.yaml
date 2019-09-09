@@ -276,10 +276,12 @@ resources:
             EOF
             systemctl daemon-reload && systemctl restart docker
             systemctl enable docker
-
+            
+            mkdir cassandra-config
+            wget -P cassandra-config https://raw.githubusercontent.com/Mohamedji/HeatTemplates/master/cassandra.yaml
             mkdir cassandra-data
             docker pull cassandra 
-            docker run --restart always -d --name=cassandra1 --hostname=cassandra1 -v "/etc/hosts:/etc/hosts" -v "cassandra-data:/var/lib/cassandra" -d -e "CASSANDRA_BROADCAST_ADDRESS=$ip1" -p 7000:7000 cassandra
+            docker run --restart always -d --name=cassandra1 --hostname=cassandra1 -v "/etc/hosts:/etc/hosts" -v "cassandra-data:/var/lib/cassandra" "cassandra-data:/etc/cassandra/  -d -e "CASSANDRA_BROADCAST_ADDRESS=$ip1" -p 7000:7000 cassandra
             export http_proxy=http://$proxy_host:$proxy_port
             export https_proxy=http://$proxy_host:$proxy_port
 
@@ -380,6 +382,9 @@ resources:
             systemctl daemon-reload && systemctl restart docker
             systemctl enable docker
 
+            mkdir cassandra-config
+            wget -P cassandra-config https://raw.githubusercontent.com/Mohamedji/HeatTemplates/master/cassandra.yaml
+            
             mkdir cassandra-data
             docker pull cassandra 
             docker run --restart always -d --name=cassandra2 --hostname=cassandra2 -v "/etc/hosts:/etc/hosts" -v "cassandra-data:/var/lib/cassandra" -d -e "CASSANDRA_BROADCAST_ADDRESS=$ip2" -e "CASSANDRA_SEEDS=$ip1" -p 7000:7000 cassandra
@@ -483,15 +488,18 @@ resources:
             systemctl daemon-reload && systemctl restart docker
             systemctl enable docker
 
+            mkdir cassandra-config
+            wget -P cassandra-config https://raw.githubusercontent.com/Mohamedji/HeatTemplates/master/cassandra.yaml
+            
             mkdir cassandra-data
             docker pull cassandra
-            docker run --restart always -d --name=cassandra3 --hostname=cassandra3 -v "/etc/hosts:/etc/hosts" -v "cassandra-data:/var/lib/cassandra" -d -e "CASSANDRA_BROADCAST_ADDRESS=$ip3" -e "CASSANDRA_SEEDS=$ip1" -p 7000:7000 cassandra
+            docker run --restart always -d --name=cassandra3 --hostname=cassandra3 -v "/etc/hosts:/etc/hosts" -v "cassandra-data:/var/lib/cassandra" -v "cassandra-data:/var/lib/cassandra" -d -e "CASSANDRA_BROADCAST_ADDRESS=$ip3" -e "CASSANDRA_SEEDS=$ip1" -p 7000:7000 cassandra
 
             curl -L -O https://dl.influxdata.com/telegraf/releases/telegraf_1.10.3-1_amd64.deb
             dpkg -i telegraf_1.10.3-1_amd64.deb
 
 
-            # Telegraf Configuration
+            # Telegraf Configuration 
             curl -L -o jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
             chmod +x ./jq
             mv jq /usr/bin
