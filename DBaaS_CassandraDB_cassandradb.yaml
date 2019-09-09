@@ -278,14 +278,16 @@ resources:
             systemctl enable docker
             
 
-            mkdir cassandra-config
-            wget -P cassandra-config https://raw.githubusercontent.com/Mohamedji/HeatTemplates/master/cassandra.yaml
-            sed 's/node_ip/$ip1/g' cassandra-config/cassandra.yaml
-            sed 's/master_ip/$ip1/g' cassandra-config/cassandra.yaml
+            #mkdir cassandra-config
+            #wget -P cassandra-config https://raw.githubusercontent.com/Mohamedji/HeatTemplates/master/cassandra.yaml
+            #sed 's/node_ip/$ip1/g' cassandra-config/cassandra.yaml
+            #sed 's/master_ip/$ip1/g' cassandra-config/cassandra.yaml
 
             mkdir cassandra-data
-            docker pull cassandra 
-            docker run --restart always -d --name=cassandra1 --hostname=cassandra1 -v "/etc/hosts:/etc/hosts" -v "cassandra-data:/var/lib/cassandra" -v "cassandra-config:/etc/cassandra" -d  -p 7000:7000 cassandra
+            docker pull bitnami/cassandra 
+            docker run --restart always --name=cassandra1 --hostname=cassandra1 -v "/etc/hosts:/etc/hosts" -v "cassandra-data:/bitnami -p 9042:9042 -e CASSANDRA_CLUSTER_NAME=cassandra-cluster -e CASSANDRA_SEEDS=cassandra1,cassandra2,cassandra3 -e CASSANDRA_PASSWORD_SEEDER=yes -e CASSANDRA_PASSWORD=password bitnami/cassandra:latest
+
+            #docker run --restart always -d --name=cassandra1 --hostname=cassandra1 -v "/etc/hosts:/etc/hosts" -v "cassandra-data:/var/lib/cassandra" -v "cassandra-config:/etc/cassandra" -d  -p 7000:7000 cassandra
             #docker run --restart always -d --name=cassandra1 --hostname=cassandra1 -v "/etc/hosts:/etc/hosts" -v "cassandra-data:/etc/cassandra/" -v "cassandra-config:/etc/cassandra" -d -p 7000:7000 cassandra
             export http_proxy=http://$proxy_host:$proxy_port
             export https_proxy=http://$proxy_host:$proxy_port
@@ -387,14 +389,15 @@ resources:
             systemctl daemon-reload && systemctl restart docker
             systemctl enable docker
             
-            mkdir cassandra-config
-            wget -P cassandra-config https://raw.githubusercontent.com/Mohamedji/HeatTemplates/master/cassandra.yaml
-            sed 's/node_ip/$ip2/g' cassandra-config/cassandra.yaml
-            sed 's/master_ip/$ip1/g' cassandra-config/cassandra.yaml
+            #mkdir cassandra-config
+            #wget -P cassandra-config https://raw.githubusercontent.com/Mohamedji/HeatTemplates/master/cassandra.yaml
+            #sed 's/node_ip/$ip2/g' cassandra-config/cassandra.yaml
+            #sed 's/master_ip/$ip1/g' cassandra-config/cassandra.yaml
 
             mkdir cassandra-data
-            docker pull cassandra 
-            docker run --restart always -d --name=cassandra2 --hostname=cassandra2 -v "/etc/hosts:/etc/hosts" -v "cassandra-data:/var/lib/cassandra" -v "cassandra-config:/etc/cassandra" -d -p 7000:7000 cassandra
+            docker pull bitnami/cassandra 
+            docker run --restart always --name=cassandra2 --hostname=cassandra2 -v "/etc/hosts:/etc/hosts" -v "cassandra-data:/bitnami -p 9042:9042 -e CASSANDRA_CLUSTER_NAME=cassandra-cluster -e CASSANDRA_SEEDS=cassandra1,cassandra2,cassandra3 -e CASSANDRA_PASSWORD_SEEDER=yes -e CASSANDRA_PASSWORD=password bitnami/cassandra:latest
+            #docker run --restart always -d --name=cassandra2 --hostname=cassandra2 -v "/etc/hosts:/etc/hosts" -v "cassandra-data:/var/lib/cassandra" -v "cassandra-config:/etc/cassandra" -d -p 7000:7000 cassandra
             #docker run --restart always -d --name=cassandra2 --hostname=cassandra2 -v "/etc/hosts:/etc/hosts" -v "cassandra-data:/etc/cassandra/" -v "cassandra-config:/etc/cassandra" -d -p 7000:7000 cassandra
             
             # Installing Telegraf agent
@@ -495,13 +498,14 @@ resources:
             systemctl daemon-reload && systemctl restart docker
             systemctl enable docker
 
-            mkdir cassandra-config
-            wget -P cassandra-config https://raw.githubusercontent.com/Mohamedji/HeatTemplates/master/cassandra.yaml
-            sed 's/node_ip/$ip3/g' cassandra-config/cassandra.yaml
-            sed 's/master_ip/$ip1/g' cassandra-config/cassandra.yaml
+            #mkdir cassandra-config
+            #wget -P cassandra-config https://raw.githubusercontent.com/Mohamedji/HeatTemplates/master/cassandra.yaml
+            #sed 's/node_ip/$ip3/g' cassandra-config/cassandra.yaml
+            #sed 's/master_ip/$ip1/g' cassandra-config/cassandra.yaml
 
             mkdir cassandra-data
-            docker pull cassandra
+            docker pull bitnami/cassandra
+            docker run --restart always --name=cassandra3 --hostname=cassandra3 -v "/etc/hosts:/etc/hosts" -v "cassandra-data:/bitnami -p 9042:9042 -e CASSANDRA_CLUSTER_NAME=cassandra-cluster -e CASSANDRA_SEEDS=cassandra1,cassandra2,cassandra3 -e CASSANDRA_PASSWORD_SEEDER=yes -e CASSANDRA_PASSWORD=password bitnami/cassandra:latest
             docker run --restart always -d --name=cassandra3 --hostname=cassandra3 -v "/etc/hosts:/etc/hosts" -v "cassandra-data:/var/lib/cassandra" -v "cassandra-config:/etc/cassandra" -d  -p 7000:7000 cassandra
             #docker run --restart always -d --name=cassandra3 --hostname=cassandra3 -v "/etc/hosts:/etc/hosts" -v "cassandra-data:/etc/cassandra/" -v "cassandra-config:/etc/cassandra" -d -p 7000:7000 cassandra
 
