@@ -280,7 +280,7 @@ resources:
 
             mkdir cassandra-data
             docker pull cassandra 
-            docker run --restart always -d --name=cassandra1 --hostname=cassandra1 -v "/etc/hosts:/etc/hosts" -v "cassandra-data:/etc/cassandra/  -d -e "CASSANDRA_BROADCAST_ADDRESS=$ip1" -e "CASSANDRA_Authorizer=CassandraAuthorizer" -e "CASSANDRA_Authenticator=PasswordAuthenticator"  -p 7000:7000 cassandra
+            docker run --restart always -d --name=cassandra1 --hostname=cassandra1 -v "/etc/hosts:/etc/hosts" -v "cassandra-data:/etc/cassandra/"  -d -e "CASSANDRA_BROADCAST_ADDRESS=$ip1" -e "CASSANDRA_Authorizer=CassandraAuthorizer" -e "CASSANDRA_Authenticator=PasswordAuthenticator"  -p 7000:7000 cassandra
             export http_proxy=http://$proxy_host:$proxy_port
             export https_proxy=http://$proxy_host:$proxy_port
 
