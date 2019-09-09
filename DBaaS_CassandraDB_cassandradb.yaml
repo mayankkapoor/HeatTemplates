@@ -279,8 +279,8 @@ resources:
             
             mkdir cassandra-data
             docker pull cassandra
-            
-            docker run --restart always -d --name=cassandra1 --hostname=cassandra1 -v "/etc/hosts:/etc/hosts" -v "cassandra-data:/var/lib/cassandra" -d -e "CASSANDRA_BROADCAST_ADDRESS=$ip1" -p 7000:7000 cassandra
+            mkdir cassandra-config
+            docker run --restart always -d --name=cassandra1 --hostname=cassandra1 -v "/etc/hosts:/etc/hosts" -v "cassandra-data:/var/lib/cassandra" -v "cassandra-config:/etc/cassandra/" -d -e "CASSANDRA_BROADCAST_ADDRESS=$ip1" -p 7000:7000 cassandra
             sleep 30
             docker exec -it cassandra1 sed -i 's/AllowAllAuthenticator/PasswordAuthenticator/g /etc/cassandra/cassandra.yaml'
             docker restart cassandra1
