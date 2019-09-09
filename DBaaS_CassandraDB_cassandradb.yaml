@@ -229,9 +229,9 @@ resources:
             $commandLog: { get_param: commandLog }
             $isprodvm: { get_param: isprodvm}
             $db: { get_param: custom_db }
-            $ip1: { get_attr: [cassandra1_floatingip, floating_ip_address] }
-            $ip2: { get_attr: [cassandra2_floatingip, floating_ip_address] }
-            $ip3: { get_attr: [cassandra3_floatingip, floating_ip_address] }
+            $ip1: { get_attr: [port1, fixed_ips, 0, ip_address] }
+            $ip2: { get_attr: [port2, fixed_ips, 0, ip_address] }
+            $ip3: { get_attr: [port3, fixed_ips, 0, ip_address] }
           template: |
             #!/bin/bash
             echo "$ip1  cassandra1" >> /etc/hosts
@@ -341,9 +341,9 @@ resources:
             $commandLog: { get_param: commandLog }
             $isprodvm: { get_param: isprodvm}
             $db: { get_param: custom_db }
-            $ip1: { get_attr: [cassandra1_floatingip, floating_ip_address] }
-            $ip2: { get_attr: [cassandra2_floatingip, floating_ip_address] }
-            $ip3: { get_attr: [cassandra3_floatingip, floating_ip_address] }
+            $ip1: { get_attr: [port1, fixed_ips, 0, ip_address] }
+            $ip2: { get_attr: [port2, fixed_ips, 0, ip_address] }
+            $ip3: { get_attr: [port3, fixed_ips, 0, ip_address] }
           template: |
             #!/bin/bash
             echo "$ip1  cassandra1" >> /etc/hosts
@@ -450,9 +450,9 @@ resources:
             $commandLog: { get_param: commandLog }
             $isprodvm: { get_param: isprodvm}
             $db: { get_param: custom_db }
-            $ip1: { get_attr: [cassandra1_floatingip, floating_ip_address] }
-            $ip2: { get_attr: [cassandra2_floatingip, floating_ip_address] }
-            $ip3: { get_attr: [cassandra3_floatingip, floating_ip_address] }
+            $ip1: { get_attr: [port1, fixed_ips, 0, ip_address] }
+            $ip2: { get_attr: [port2, fixed_ips, 0, ip_address] }
+            $ip3: { get_attr: [port3, fixed_ips, 0, ip_address] }
           template: |
             #!/bin/bash
             echo "$ip1  cassandra1" >> /etc/hosts
