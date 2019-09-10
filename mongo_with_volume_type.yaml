@@ -74,16 +74,19 @@ parameters:
     default: JMNG-PE3-PROD3
     
 resources:
+
   random_string1:
       type: OS::Heat::RandomString
       properties:
           length: 4
           sequence: lowercase
+          
   random_string2:
       type: OS::Heat::RandomString
       properties:
           length: 4
           sequence: lowercase
+          
   random_string3:
       type: OS::Heat::RandomString
       properties:
