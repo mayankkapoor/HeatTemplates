@@ -1,0 +1,123 @@
+heat_template_version: 2017-02-24
+description: >
+  This template to test volume creation
+parameters:
+  image:
+    type: string
+    default: Ubuntu1604
+    description: The Ubuntu image to use.
+  volume_size:
+    type: number
+    description: Database volume size
+    default: 20
+  volume_type:
+    type: number
+    description: Storage Volume type HDD/SSD
+    default: ceph
+  az1:
+    type: string
+    description: AZ to be used for node1
+    default: JMNG-PE3-PROD1
+  az2:
+    type: string
+    description: AZ to be used for node2
+    default: JMNG-PE3-PROD2
+  az3:
+    type: string
+    description: AZ to be used for node3
+    default: JMNG-PE3-PROD3
+
+resources:
+  random_string1:
+      type: OS::Heat::RandomString
+      properties:
+          length: 4
+          sequence: lowercase
+  random_string2:
+      type: OS::Heat::RandomString
+      properties:
+          length: 4
+          sequence: lowercase
+  random_string3:
+      type: OS::Heat::RandomString
+      properties:
+          length: 4
+          sequence: lowercase
+
+  mongo1_name:
+      type: OS::Heat::Value
+      depends_on: random_string1
+      properties:
+          value:
+              str_replace:
+                  template: dbaas-$prefix-$random
+                  params:
+                      $prefix: { get_param: stack_name }
+                      $random: { get_resource: random_string1 }
+
+  mongo2_name:
+      type: OS::Heat::Value
+      depends_on: random_string2
+      properties:
+          value:
+              str_replace:
+                  template: dbaas-$prefix-$random
+                  params:
+                      $prefix: { get_param: stack_name }
+                      $random: { get_resource: random_string2 }
+  mongo3_name:
+      type: OS::Heat::Value
+      depends_on: random_string3
+      properties:
+          value:
+              str_replace:
+                  template: dbaas-$prefix-$random
+                  params:
+                      $prefix: { get_param: stack_name }
+                      $random: { get_resource: random_string3 }
+
+  random_string_mongo:
+      type: OS::Heat::RandomString
+      properties:
+          length: 10
+          sequence: lowercase
+
+   mongo1_volume:
+      type: OS::Cinder::Volume
+      properties:
+          availability_zone: { get_param: az1 }
+          image: { get_param: image }
+          name: { get_attr: [mongo1_name, value] }
+          size: { get_param: volume_size }
+          volume_type: { get_param: volume_type }
+          
+   mongo2_volume:
+      type: OS::Cinder::Volume
+      properties:
+          availability_zone: { get_param: az2 }
+          image: { get_param: image }
+          name: { get_attr: [mongo2_name, value] }
+          size: { get_param: volume_size }
+          volume_type: { get_param: volume_type }
+          
+   mongo3_volume:
+      type: OS::Cinder::Volume
+      properties:
+          availability_zone: { get_param: az3 }
+          image: { get_param: image }
+          name: { get_attr: [mongo3_name, value] }
+          size: { get_param: volume_size }
+          volume_type: { get_param: volume_type }
+          
+outputs:
+  volume_info: 
+    description: volume details
+    value:
+      str_replace:
+        template: $host1,$host2,$host3
+        params:
+          $host1: { get_attr: [mongo1_floatingip, floating_ip_address] }
+          $host2: { get_attr: [mongo2_floatingip, floating_ip_address] }
+          $host3: { get_attr: [mongo3_floatingip, floating_ip_address] }
+
+    
