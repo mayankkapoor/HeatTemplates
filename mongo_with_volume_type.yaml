@@ -211,15 +211,15 @@ resources:
       properties:
           floating_network_id: { get_param: public_network_id }
           port_id: { get_resource: port3 }
- 
+          
   mongo1_volume:
       type: OS::Cinder::Volume
       properties:
           image: { get_param: image }
           name: { get_attr: [mongo1_name, value] }
           size: { get_param: volume_size }
-          volume_type: { get_param: volume_type }
-          
+          volume_type: { get_param: volume_type }        
+  
   mongo2_volume:
       type: OS::Cinder::Volume
       properties:
