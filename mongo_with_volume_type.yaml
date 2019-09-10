@@ -34,7 +34,7 @@ parameters:
     description: Database volume size
     default: 20
   volume_type:
-    type: number
+    type: string
     description: Volume type
     default: ceph
   proxy_host:
