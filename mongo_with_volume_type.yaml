@@ -74,7 +74,6 @@ parameters:
     default: JMNG-PE3-PROD3
     
 resources:
-
   random_string1:
       type: OS::Heat::RandomString
       properties:
@@ -221,7 +220,7 @@ resources:
           size: { get_param: volume_size }
           volume_type: { get_param: volume_type }
           
-   mongo2_volume:
+  mongo2_volume:
       type: OS::Cinder::Volume
       properties:
           image: { get_param: image }
@@ -229,7 +228,7 @@ resources:
           size: { get_param: volume_size }
           volume_type: { get_param: volume_type }
           
-  mongo1_volume:
+  mongo3_volume:
       type: OS::Cinder::Volume
       properties:
           image: { get_param: image }
