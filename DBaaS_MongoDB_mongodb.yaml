@@ -33,6 +33,10 @@ parameters:
     type: number
     description: Database volume size
     default: 20
+  volume_type:
+    type: number
+    description: Storage Volume type HDD/SSD
+    default: ceph
   proxy_host:
     type: string
     description: Proxy host for this environment
@@ -205,6 +209,34 @@ resources:
       properties:
           floating_network_id: { get_param: public_network_id }
           port_id: { get_resource: port3 }
+          
+   mongo1_volume:
+      type: OS::Cinder::Volume
+      properties:
+          availability_zone: { get_param: az1 }
+          image: { get_param: image }
+          name: { get_attr: [mongo1_name, value] }
+          size: { get_param: volume_size }
+          volume_type: { get_param: volume_type }
+          
+   mongo2_volume:
+      type: OS::Cinder::Volume
+      properties:
+          availability_zone: { get_param: az2 }
+          image: { get_param: image }
+          name: { get_attr: [mongo2_name, value] }
+          size: { get_param: volume_size }
+          volume_type: { get_param: volume_type }
+          
+   mongo3_volume:
+      type: OS::Cinder::Volume
+      properties:
+          availability_zone: { get_param: az3 }
+          image: { get_param: image }
+          name: { get_attr: [mongo3_name, value] }
+          size: { get_param: volume_size }
+          volume_type: { get_param: volume_type }
+          
   mongo1:
     type: OS::Nova::Server
     depends_on: [ port1, mongo2, mongo3 ]
