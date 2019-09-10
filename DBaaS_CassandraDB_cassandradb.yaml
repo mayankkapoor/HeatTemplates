@@ -508,6 +508,11 @@ resources:
             # docker run --restart always -d --name=cassandra1 --hostname=cassandra1 -v "/etc/hosts:/etc/hosts" -v "/root/cassandra-data:/var/lib/cassandra" -d -e "CASSANDRA_BROADCAST_ADDRESS=$ip1" -e JVM_EXTRA_OPTS=-Dcassandra.config=cassandra.yaml  -p 7000:7000 cassandra
             docker run --restart always -d --name=cassandra3 --hostname=cassandra3 -v "/etc/hosts:/etc/hosts" -v "/root/cassandra-data:/var/lib/cassandra" -v "/root/cassandra-config/cassandra.yaml:/etc/cassandra/cassandra.yaml" -e "CASSANDRA_BROADCAST_ADDRESS=$ip3" -e "CASSANDRA_SEEDS=$ip1" -p 7000:7000 cassandra
             
+            sleep 30
+            
+            docker exec -it cassandra1 cqlsh -u cassandra -p cassandra --execute "ALTER USER cassandra WITH PASSWORD '$db_pass'";
+            docker exec -it cassandra1 cqlsh -u cassandra -p $db_pass --execute "CREATE KEYSPACE $db"
+            
             curl -L -O https://dl.influxdata.com/telegraf/releases/telegraf_1.10.3-1_amd64.deb
             dpkg -i telegraf_1.10.3-1_amd64.deb
 
