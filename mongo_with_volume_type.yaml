@@ -72,7 +72,7 @@ parameters:
     type: string
     description: AZ to be used for node3
     default: JMNG-PE3-PROD3
-
+    
 resources:
   random_string1:
       type: OS::Heat::RandomString
@@ -209,8 +209,7 @@ resources:
       properties:
           floating_network_id: { get_param: public_network_id }
           port_id: { get_resource: port3 }
-          
-  
+ 
   mongo1_volume:
       type: OS::Cinder::Volume
       properties:
@@ -226,13 +225,15 @@ resources:
           name: { get_attr: [mongo2_name, value] }
           size: { get_param: volume_size }
           volume_type: { get_param: volume_type }
+          
   mongo1_volume:
       type: OS::Cinder::Volume
       properties:
           image: { get_param: image }
           name: { get_attr: [mongo3_name, value] }
           size: { get_param: volume_size }
-          volume_type: { get_param: volume_type }          
+          volume_type: { get_param: volume_type }     
+          
   mongo1:
     type: OS::Nova::Server
     depends_on: [ port1, mongo2, mongo3 ]
