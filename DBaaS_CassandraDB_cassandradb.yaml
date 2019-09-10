@@ -427,7 +427,7 @@ resources:
     type: OS::Nova::Server
     depends_on: [ port3, cassandra1 ]
     properties:
-      name: { get_attr: [cassandra1_name, value] }
+      name: { get_attr: [cassandra3_name, value] }
       flavor: { get_param: flavor }
       key_name: { get_param: key }
       availability_zone: { get_param: az3 }
