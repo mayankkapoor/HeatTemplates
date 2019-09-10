@@ -116,8 +116,8 @@ outputs:
       str_replace:
         template: $host1,$host2,$host3
         params:
-          $host1: { get_attr: [mongo1_floatingip, floating_ip_address] }
-          $host2: { get_attr: [mongo2_floatingip, floating_ip_address] }
-          $host3: { get_attr: [mongo3_floatingip, floating_ip_address] }
+          $host1: { get_attr: [mongo1_volume] }
+          $host2: { get_attr: [mongo2_volume] }
+          $host3: { get_attr: [mongo3_volume] }
 
     
