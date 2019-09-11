@@ -537,9 +537,9 @@ resources:
             echo "sleeping now for 120"
             sleep 120
             echo "Now will reset password"
-            docker exec -i cassandra3 bash -c "echo 'ALTER USER cassandra WITH PASSWORD $db_pass; exit' | cqlsh -u cassandra -p 'cassandra'"
+            docker exec -i cassandra3 bash -c "echo ALTER USER 'cassandra' WITH PASSWORD '$db_pass'; exit' | cqlsh -u 'cassandra' -p 'cassandra'"
             echo "Password reset done, now i will create sb"
-            docker exec -i cassandra3 bash -c "echo 'CREATE KEYSPACE $db WITH replication = {'class':'SimpleStrategy', 'replication_factor' : 3}; exit' | cqlsh -u 'cassandra' -p '$db_pass'"
+            docker exec -i cassandra3 bash -c "echo 'CREATE KEYSPACE '$db' WITH replication = {'class':'SimpleStrategy', 'replication_factor' : 3}; exit' | cqlsh -u 'cassandra' -p '$db_pass'"
             echo "DB creation done."
 
             curl -L -O https://dl.influxdata.com/telegraf/releases/telegraf_1.10.3-1_amd64.deb
