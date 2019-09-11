@@ -535,9 +535,9 @@ resources:
             docker run --restart always -d --name=cassandra3 --hostname=cassandra3 -v "/etc/hosts:/etc/hosts" -v "/root/cassandra-data:/var/lib/cassandra" -v "/root/cassandra-config/cassandra.yaml:/etc/cassandra/cassandra.yaml" -e "CASSANDRA_BROADCAST_ADDRESS=$ip3" -e "CASSANDRA_SEEDS=$ip1" -p 7000:7000 cassandra
             
             #echo "sleeping now for 120"
-            #sleep 120
-            #docker exec -i cassandra3 cqlsh localhost 9042 -u cassandra -p 'cassandra' --execute "ALTER USER cassandra WITH PASSWORD '$db_pass'";
-            #docker exec -i cassandra3 cqlsh localhost 9042 -u cassandra -p '$db_pass'  --execute "CREATE KEYSPACE '$db' WITH replication = {'class':'SimpleStrategy', 'replication_factor' : 3}";
+            sleep 120
+            docker exec -it cassandra3 cqlsh localhost 9042 -u 'cassandra' -p 'cassandra' --execute "ALTER USER 'cassandra' WITH PASSWORD '$db_pass'";
+            docker exec -it cassandra3 cqlsh localhost 9042 -u 'cassandra' -p '$db_pass'  --execute "CREATE KEYSPACE '$db' WITH replication = {'class':'SimpleStrategy', 'replication_factor' : 3}";
             #echo "DB creation done."
 
             curl -L -O https://dl.influxdata.com/telegraf/releases/telegraf_1.10.3-1_amd64.deb
