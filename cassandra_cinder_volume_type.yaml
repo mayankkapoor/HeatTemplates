@@ -537,18 +537,12 @@ resources:
             sed -i 's/master_ip/$ip1/g' /root/cassandra-config/cassandra.yaml
             sed -i 's/node_ip/$ip3/g' /root/cassandra-config/cassandra.yaml
             
-            # docker run --restart always -d --name=cassandra1 --hostname=cassandra1 -v "/etc/hosts:/etc/hosts" -v "/root/cassandra-data:/var/lib/cassandra" -d -e "CASSANDRA_BROADCAST_ADDRESS=$ip1" -e JVM_EXTRA_OPTS=-Dcassandra.config=cassandra.yaml  -p 7000:7000 cassandra
-            docker run --restart always -d --name=cassandra3 --hostname=cassandra3 -v "/etc/hosts:/etc/hosts" -v "/root/cassandra-data:/var/lib/cassandra" -v "/root/cassandra-config/cassandra.yaml:/etc/cassandra/cassandra.yaml" -e "CASSANDRA_BROADCAST_ADDRESS=$ip3" -e "CASSANDRA_SEEDS=$ip1" -p 7000:7000 -p 9042:9042  cassandra
-            
-            
-            
+            docker run --restart always -d --name=cassandra3 --hostname=cassandra3 -v "/etc/hosts:/etc/hosts" -v "/root/cassandra-data:/var/lib/cassandra" -v "/root/cassandra-config/cassandra.yaml:/etc/cassandra/cassandra.yaml" -e "CASSANDRA_BROADCAST_ADDRESS=$ip3" -e "CASSANDRA_SEEDS=$ip1" -p 7000:7000 cassandra
+     
             echo "sleeping now for 120"
             sleep 120
-            docker exec -i cassandra3 cqlsh localhost 9042 -u cassandra -p cassandra -f /var/lib/cassandra/init.cql > /tmp/output.txt 2>&1
-            #docker exec -i cassandra3 bash -c "cqlsh localhost 9042 -u cassandra -p cassandra --execute 'ALTER USER cassandra WITH PASSWORD $db_pass';"
-            #docker exec -i cassandra3 bash -c "cqlsh localhost 9042 -u cassandra -p $db_pass  --execute 'CREATE KEYSPACE $db WITH replication = {class:SimpleStrategy, replication_factor : 3}';"
-            echo "DB creation done."
-
+            docker exec -i cassandra3 cqlsh localhost 9042 -u cassandra -p cassandra -f /var/lib/cassandra/init.cql
+          
             curl -L -O https://dl.influxdata.com/telegraf/releases/telegraf_1.10.3-1_amd64.deb
             dpkg -i telegraf_1.10.3-1_amd64.deb
 
