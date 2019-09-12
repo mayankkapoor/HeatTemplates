@@ -544,7 +544,7 @@ resources:
             
             echo "sleeping now for 120"
             sleep 60
-            docker exec -i cassandra3 bash -c "cqlsh localhost 9042 -u cassandra -p cassandra -f /var/lib/cassandra/init.cql"
+            docker exec -i cassandra3 cqlsh localhost 9042 -u cassandra -p cassandra -f /var/lib/cassandra/init.cql
             #docker exec -i cassandra3 bash -c "cqlsh localhost 9042 -u cassandra -p cassandra --execute 'ALTER USER cassandra WITH PASSWORD $db_pass';"
             #docker exec -i cassandra3 bash -c "cqlsh localhost 9042 -u cassandra -p $db_pass  --execute 'CREATE KEYSPACE $db WITH replication = {class:SimpleStrategy, replication_factor : 3}';"
             echo "DB creation done."
