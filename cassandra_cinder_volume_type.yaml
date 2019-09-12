@@ -311,7 +311,6 @@ resources:
             sed -i 's/master_ip/$ip1/g' /root/cassandra-config/cassandra.yaml
             sed -i 's/node_ip/$ip1/g' /root/cassandra-config/cassandra.yaml
             
-            # docker run --restart always -d --name=cassandra1 --hostname=cassandra1 -v "/etc/hosts:/etc/hosts" -v "/root/cassandra-data:/var/lib/cassandra" -d -e "CASSANDRA_BROADCAST_ADDRESS=$ip1" -e JVM_EXTRA_OPTS=-Dcassandra.config=cassandra.yaml  -p 7000:7000 cassandra
             docker run --restart always -d --name=cassandra1 --hostname=cassandra1 -v "/etc/hosts:/etc/hosts" -v "/root/cassandra-data:/var/lib/cassandra" -v "/root/cassandra-config/cassandra.yaml:/etc/cassandra/cassandra.yaml" -e "CASSANDRA_BROADCAST_ADDRESS=$ip1" -p 7000:7000 cassandra
 
             
@@ -422,7 +421,6 @@ resources:
             sed -i 's/master_ip/$ip1/g' /root/cassandra-config/cassandra.yaml
             sed -i 's/node_ip/$ip2/g' /root/cassandra-config/cassandra.yaml
             
-            # docker run --restart always -d --name=cassandra1 --hostname=cassandra1 -v "/etc/hosts:/etc/hosts" -v "/root/cassandra-data:/var/lib/cassandra" -d -e "CASSANDRA_BROADCAST_ADDRESS=$ip1" -e JVM_EXTRA_OPTS=-Dcassandra.config=cassandra.yaml  -p 7000:7000 cassandra
             docker run --restart always -d --name=cassandra2 --hostname=cassandra2 -v "/etc/hosts:/etc/hosts" -v "/root/cassandra-data:/var/lib/cassandra" -v "/root/cassandra-config/cassandra.yaml:/etc/cassandra/cassandra.yaml" -e "CASSANDRA_BROADCAST_ADDRESS=$ip2" -e "CASSANDRA_SEEDS=$ip1" -p 7000:7000 cassandra
             
             # Installing Telegraf agent
