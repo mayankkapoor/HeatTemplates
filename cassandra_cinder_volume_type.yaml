@@ -526,6 +526,12 @@ resources:
             docker pull cassandra
             
             mkdir -p /root/cassandra-data
+            
+            cat <<EOF >>/root/cassandra-data/init.cql
+            ALTER USER cassandra WITH PASSWORD $db_pass';
+            CREATE KEYSPACE $db WITH replication = {class:SimpleStrategy, replication_factor : 3}';
+            EOF
+            
             mkdir -p /root/cassandra-config
             wget https://raw.githubusercontent.com/Mohamedji/HeatTemplates/master/cassandra.yaml -O /root/cassandra-config/cassandra.yaml
             sed -i 's/master_ip/$ip1/g' /root/cassandra-config/cassandra.yaml
@@ -534,10 +540,7 @@ resources:
             # docker run --restart always -d --name=cassandra1 --hostname=cassandra1 -v "/etc/hosts:/etc/hosts" -v "/root/cassandra-data:/var/lib/cassandra" -d -e "CASSANDRA_BROADCAST_ADDRESS=$ip1" -e JVM_EXTRA_OPTS=-Dcassandra.config=cassandra.yaml  -p 7000:7000 cassandra
             docker run --restart always -d --name=cassandra3 --hostname=cassandra3 -v "/etc/hosts:/etc/hosts" -v "/root/cassandra-data:/var/lib/cassandra" -v "/root/cassandra-config/cassandra.yaml:/etc/cassandra/cassandra.yaml" -e "CASSANDRA_BROADCAST_ADDRESS=$ip3" -e "CASSANDRA_SEEDS=$ip1" -p 7000:7000 cassandra
             
-            cat <<EOF >>/root/cassandra-data/init.cql
-            ALTER USER cassandra WITH PASSWORD $db_pass';
-            CREATE KEYSPACE $db WITH replication = {class:SimpleStrategy, replication_factor : 3}';
-            EOF
+            
             
             echo "sleeping now for 120"
             sleep 60
