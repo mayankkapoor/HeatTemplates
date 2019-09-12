@@ -538,13 +538,13 @@ resources:
             sed -i 's/node_ip/$ip3/g' /root/cassandra-config/cassandra.yaml
             
             # docker run --restart always -d --name=cassandra1 --hostname=cassandra1 -v "/etc/hosts:/etc/hosts" -v "/root/cassandra-data:/var/lib/cassandra" -d -e "CASSANDRA_BROADCAST_ADDRESS=$ip1" -e JVM_EXTRA_OPTS=-Dcassandra.config=cassandra.yaml  -p 7000:7000 cassandra
-            docker run --restart always -d --name=cassandra3 --hostname=cassandra3 -v "/etc/hosts:/etc/hosts" -v "/root/cassandra-data:/var/lib/cassandra" -v "/root/cassandra-config/cassandra.yaml:/etc/cassandra/cassandra.yaml" -e "CASSANDRA_BROADCAST_ADDRESS=$ip3" -e "CASSANDRA_SEEDS=$ip1" -p 7000:7000 cassandra
+            docker run --restart always -d --name=cassandra3 --hostname=cassandra3 -v "/etc/hosts:/etc/hosts" -v "/root/cassandra-data:/var/lib/cassandra" -v "/root/cassandra-config/cassandra.yaml:/etc/cassandra/cassandra.yaml" -e "CASSANDRA_BROADCAST_ADDRESS=$ip3" -e "CASSANDRA_SEEDS=$ip1" -p 7000:7000 -p 9042:9042  cassandra
             
             
             
             echo "sleeping now for 120"
             sleep 120
-            docker exec -i cassandra3 cqlsh localhost 9042 -u cassandra -p cassandra -f /var/lib/cassandra/init.cql > /tmp/output.txt 2>&1
+            docker exec -i cassandra3 cqlsh cassandra3 9042 -u cassandra -p cassandra -f /var/lib/cassandra/init.cql > /tmp/output.txt 2>&1
             #docker exec -i cassandra3 bash -c "cqlsh localhost 9042 -u cassandra -p cassandra --execute 'ALTER USER cassandra WITH PASSWORD $db_pass';"
             #docker exec -i cassandra3 bash -c "cqlsh localhost 9042 -u cassandra -p $db_pass  --execute 'CREATE KEYSPACE $db WITH replication = {class:SimpleStrategy, replication_factor : 3}';"
             echo "DB creation done."
