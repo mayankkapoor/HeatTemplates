@@ -61,8 +61,8 @@ parameters:
     type: string
     default: non-prod
   commandLog:
-    type: boolean  
-    default: false  
+    type: boolean
+    default: false
 
 
 
@@ -122,9 +122,8 @@ resources:
         str_replace:
           template: |
             #!/bin/bash -v
-            sudo hostname localhost
-            echo "sudo hostnamectl set-hostname localhost" >> ~/.profile
             sudo -i
+            echo "127.0.1.1 $serverName" >> /etc/hosts
             rm -rf /var/lib/apt/lists/lock
             export http_proxy=$proxy
             export https_proxy=$proxy
@@ -166,9 +165,9 @@ resources:
             apt-get update -y
             apt-get install libtool-bin -y
             apt-get install jq -y
-            
-            ################snoopy install 
-            if [$commandLog=true]
+
+            ################snoopy install
+            if [ $commandLog = True ]
             then
               rm -f snoopy-install.sh
               curl -L -o snoopy-install.sh https://github.com/a2o/snoopy/raw/install/doc/install/bin/snoopy-install.sh
@@ -177,6 +176,7 @@ resources:
               chmod -R 755 /var/log/auth.log
               snoopy-enable
             else
+              echo "snoopy not installed"
             fi
 
             ##### Telegraf configurations download
@@ -206,6 +206,7 @@ resources:
             $bootImage: { get_param: bootImage }
             $isprodvm: { get_param: isprodvm }
             $commandLog : { get_param: commandLog }
+            $serverName: { get_param: serverName }
 
 
   server_floating_ip:

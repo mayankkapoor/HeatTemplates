@@ -1,4 +1,4 @@
-heat_template_version: 2013-05-23
+heat_template_version: 2016-10-14
 description: >
   Create a simple VM using Heat
 parameters:
@@ -65,9 +65,12 @@ parameters:
     default: non-prod
 
   commandLog:
-    type: string  
+    type: boolean
     default: false
-
+    
+#   environment:
+#     type: string
+#     default: development  
 
 resources:
   security_group:
@@ -119,16 +122,16 @@ resources:
         - device_name: vda
           volume_id: { get_resource: bootable_volume }
           delete_on_termination: True
-
+#     metadata:
+#       env: local
 
 
       user_data:
         str_replace:
           template: |
             #!/bin/bash -v
-            sudo hostname localhost
-            echo "sudo hostnamectl set-hostname localhost" >> ~/.profile
             sudo -i
+            echo "127.0.1.1 $serverName" >> /etc/hosts
             rm -rf /var/lib/apt/lists/lock
             export http_proxy=$proxy
             export https_proxy=$proxy
@@ -168,24 +171,38 @@ resources:
             then
               curl -L -O https://dl.influxdata.com/telegraf/releases/telegraf_1.10.3-1_amd64.deb
               dpkg -i telegraf_1.10.3-1_amd64.deb
-              apt-get update -y
-              apt-get install libtool-bin -y
-
+              # Snoopy dependency install
+              if [ $commandLog = True ]
+              then
+                apt-get update -y
+                apt-get install libtool-bin -y
+              fi
             elif [ $bootImage = "Centos-7.5" ] || [ $bootImage = "RHEL-7.5" ]
             then
               curl -L -O https://dl.influxdata.com/telegraf/releases/telegraf-1.10.3-1.x86_64.rpm
               yum localinstall telegraf-1.10.3-1.x86_64.rpm -y
-              yum update -y
-              yum install libtool -y
+              # Snoopy dependency install
+              if [ $commandLog = True ]
+              then
+                yum update -y
+                yum install libtool -y
+                sed -i -e 's/secure/auth.log/' /etc/rsyslog.conf
+                service rsyslog restart
+              fi
             else
               echo "Unknown image, assuming debian OS"
               curl -L -O https://dl.influxdata.com/telegraf/releases/telegraf_1.10.3-1_amd64.deb
               dpkg -i telegraf_1.10.3-1_amd64.deb
-              apt-get install libtool-bin -y
+              # Snoopy dependency install
+              if [ $commandLog = True ]
+              then
+                apt-get update -y
+                apt-get install libtool-bin -y
+              fi
             fi
 
-            ################snoopy install 
-            if [$commandLog = "on"]
+            ################snoopy install
+            if [ $commandLog = True ]
             then
               rm -f snoopy-install.sh
               curl -L -o snoopy-install.sh https://github.com/a2o/snoopy/raw/install/doc/install/bin/snoopy-install.sh
@@ -194,6 +211,7 @@ resources:
               chmod -R 755 /var/log/auth.log
               snoopy-enable
             else
+              echo "snoopy not installed"
             fi
 
             ################# Telegraf agent config
@@ -210,14 +228,14 @@ resources:
             fi
             curl -o /etc/telegraf/longrunning.sh https://raw.githubusercontent.com/mayankkapoor/statuscheck/test/longrunning.sh
             curl -o /etc/telegraf/commands.sh https://raw.githubusercontent.com/mayankkapoor/statuscheck/test/commands.sh
-            
             service telegraf $istelegrafon
           params:
             $proxy: { get_param: proxy_ip }
-            $istelegrafon : { get_param: istelegrafon }
+            $istelegrafon: { get_param: istelegrafon }
             $bootImage: { get_param: bootImage }
             $isprodvm: { get_param: isprodvm }
-            $commandLog : { get_param: commandLog }
+            $commandLog: { get_param: commandLog }
+            $serverName: { get_param: serverName }
 
 
   server_floating_ip:
