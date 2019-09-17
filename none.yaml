@@ -3,9 +3,9 @@ description: >
   Create a simple VM using Heat
 parameters:
 
-  # sg_type:
-  #   default: default
-  #   type: string
+  sg_type:
+    type: string
+    default: defaultsg 
 
   key:
     type: string
@@ -82,13 +82,13 @@ parameters:
 #     type: string
 #     default: development  
 
-# conditions:
-#   custom: {equals: [{get_param: env_type}, "custom"]}
-#   default:
-#     not:
-#       equals:
-#       - get_param: env_type
-#       - custom
+conditions:
+  custom: {equals: [{get_param: sg_type}, "custom"]}
+  defaultsg:
+    not:
+      equals:
+      - get_param: sg_type
+      - custom
 
 resources:
   # security_groups: [security-name.alarmsfeature_sg]
@@ -132,6 +132,7 @@ resources:
         - subnet_id: { get_param: internalSubnet  }
       security_groups:
         - { get_param: security_group_id }
+        condition: defaultsg
       # security_groups:
       #   - { get_resource: security_group }
 
