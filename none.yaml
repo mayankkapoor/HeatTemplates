@@ -76,7 +76,7 @@ parameters:
   security_group_id:
     type: string
     description: alarmsfeature_sg from QA-test hardcoded
-    default: alarmsfeature_sg
+    default: 6bad5b8a-5b2e-48f7-8483-8a02a3c4383f
     
 #   environment:
 #     type: string
@@ -130,8 +130,7 @@ resources:
       network_id: { get_param: internalNet }
       fixed_ips:
         - subnet_id: { get_param: internalSubnet  }
-      security_groups:
-        - { get_param: security_group_id }
+      security_groups: [ get_param: security_group_id ]
       # security_groups:
       #   - { get_resource: security_group }
 
