@@ -76,7 +76,7 @@ parameters:
   security_group_id:
     type: string
     description: alarmsfeature_sg from QA-test hardcoded
-    default: 'alarmsfeature_sg'
+    default: alarmsfeature_sg
     
 #   environment:
 #     type: string
