@@ -76,7 +76,7 @@ parameters:
   security_group_id:
     type: string
     description: alarmsfeature_sg from QA-test hardcoded
-    default: '6bad5b8a-5b2e-48f7-8483-8a02a3c4383f'
+    default: 'alarmsfeature_sg'
     
 #   environment:
 #     type: string
@@ -91,10 +91,11 @@ parameters:
 #       - custom
 
 resources:
-  security_group:
-    type: OS::Neutron::SecurityGroup
-    properties:
-      name: { get_param: security_group_id }
+  # security_groups: [security-name.alarmsfeature_sg]
+  # security_group:
+  #   type: OS::Neutron::SecurityGroup
+  #   properties:
+  #     name: { get_param: security_group_id }
     # condition: custom
 
   # security_group:
@@ -130,7 +131,9 @@ resources:
       fixed_ips:
         - subnet_id: { get_param: internalSubnet  }
       security_groups:
-        - { get_resource: security_group }
+        - { get_param: security_group_id }
+      # security_groups:
+      #   - { get_resource: security_group }
 
 
   server:
