@@ -2,6 +2,11 @@ heat_template_version: 2016-10-14
 description: >
   Create a simple VM using Heat
 parameters:
+
+  # sg_type:
+  #   default: default
+  #   type: string
+
   key:
     type: string
     description: >
@@ -67,37 +72,55 @@ parameters:
   commandLog:
     type: boolean
     default: false
+
+  security_group_id:
+    type: string
+    description: alarmsfeature_sg from QA-test hardcoded
+    default: '6bad5b8a-5b2e-48f7-8483-8a02a3c4383f'
     
 #   environment:
 #     type: string
 #     default: development  
 
+# conditions:
+#   custom: {equals: [{get_param: env_type}, "custom"]}
+#   default:
+#     not:
+#       equals:
+#       - get_param: env_type
+#       - custom
+
 resources:
   security_group:
-    type: OS::Neutron::SecurityGroup
     properties:
-      name: { get_param: securityGroup }
-      rules: [
-             {"direction": ingress,
-              "remote_ip_prefix": 0.0.0.0/0,
-              "port_range_min": 22,
-              "port_range_max": 22,
-              "ethertype": IPv4,
-              "protocol": tcp},
-              {"direction": ingress,
-              "remote_ip_prefix": 0.0.0.0/0,
-              "port_range_min": 80,
-              "port_range_max": 80,
-              "ethertype": IPv4,
-              "protocol": tcp},
-              {"direction": ingress,
-              "remote_ip_prefix": 0.0.0.0/0,
-              "port_range_min": 443,
-              "port_range_max": 443,
-              "ethertype": IPv4,
-              "protocol": tcp}
+      name: { get_param: security_group_id }
+    # condition: custom
 
-            ]
+  # security_group:
+  #   type: OS::Neutron::SecurityGroup
+  #   properties:
+  #     name: { get_param: securityGroup }
+  #     rules: [
+  #            {"direction": ingress,
+  #             "remote_ip_prefix": 0.0.0.0/0,
+  #             "port_range_min": 22,
+  #             "port_range_max": 22,
+  #             "ethertype": IPv4,
+  #             "protocol": tcp},
+  #             {"direction": ingress,
+  #             "remote_ip_prefix": 0.0.0.0/0,
+  #             "port_range_min": 80,
+  #             "port_range_max": 80,
+  #             "ethertype": IPv4,
+  #             "protocol": tcp},
+  #             {"direction": ingress,
+  #             "remote_ip_prefix": 0.0.0.0/0,
+  #             "port_range_min": 443,
+  #             "port_range_max": 443,
+  #             "ethertype": IPv4,
+  #             "protocol": tcp}
+
+  #           ]
 
   server_port:
     type: OS::Neutron::Port
