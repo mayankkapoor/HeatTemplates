@@ -92,6 +92,7 @@ parameters:
 
 resources:
   security_group:
+    type: OS::Neutron::SecurityGroup
     properties:
       name: { get_param: security_group_id }
     # condition: custom
