@@ -131,7 +131,7 @@ resources:
       fixed_ips:
         - subnet_id: { get_param: internalSubnet  }
       security_groups: { get_param: security_group_id }
-        condition: defaultsg
+        condition: custom
       
       # security_groups:
       #   - { get_resource: security_group }
