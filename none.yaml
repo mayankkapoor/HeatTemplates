@@ -102,7 +102,6 @@ resources:
     type: OS::Neutron::SecurityGroup
     properties:
       name: { get_param: securityGroup }
-      condition: defaultsg
       rules: [
              {"direction": ingress,
               "remote_ip_prefix": 0.0.0.0/0,
@@ -124,6 +123,7 @@ resources:
               "protocol": tcp}
 
             ]
+    condition: defaultsg
 
   server_port:
     type: OS::Neutron::Port
@@ -131,7 +131,7 @@ resources:
       network_id: { get_param: internalNet }
       fixed_ips:
         - subnet_id: { get_param: internalSubnet  }
-      security_groups: { if: ["custom", get_param: security_group_id, get_resource: security_group ] }
+      security_groups: { if: ["custom", {get_param: security_group_id}, {get_resource: security_group} ] }
       
       # security_groups:
       #   - { get_resource: security_group }
