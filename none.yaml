@@ -5,7 +5,7 @@ parameters:
 
   sg_type:
     type: string
-    default: custom 
+    default: defaultsg 
 
   key:
     type: string
