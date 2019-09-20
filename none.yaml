@@ -84,11 +84,7 @@ parameters:
 
 conditions:
   custom: {equals: [{get_param: sg_type}, "custom"]}
-  defaultsg:
-    not:
-      equals:
-      - get_param: sg_type
-      - custom
+  defaultsg: {equals: [{get_param: sg_type}, "defaultsg"]}
 
 resources:
   # security_groups: [security-name.alarmsfeature_sg]
@@ -131,25 +127,23 @@ resources:
       network_id: { get_param: internalNet }
       fixed_ips:
         - subnet_id: { get_param: internalSubnet  }
-      # security_groups: 
-      #   - { if: ["custom", {get_param: security_group_id}, {get_resource: security_group} ] }
-      
       security_groups:
         - { get_resource: security_group }
-    condition: defaultsg
+    condition: defaultsg     
+    
 
-  server_port:
-    type: OS::Neutron::Port
-    properties:
-      network_id: { get_param: internalNet }
-      fixed_ips:
-        - subnet_id: { get_param: internalSubnet  }
-      # security_groups: 
-      #   - { if: ["custom", {get_param: security_group_id}, {get_resource: security_group} ] }
+  # server_port:
+  #   type: OS::Neutron::Port
+  #   properties:
+  #     network_id: { get_param: internalNet }
+  #     fixed_ips:
+  #       - subnet_id: { get_param: internalSubnet  }
+  #     # security_groups: 
+  #     #   - { if: ["custom", {get_param: security_group_id}, {get_resource: security_group} ] }
       
-      security_groups:
-        - { get_param: security_group_id }
-    condition: custom
+  #     security_groups:
+  #       - { get_param: security_group_id }
+  #   condition: custom
 
 
   server:
