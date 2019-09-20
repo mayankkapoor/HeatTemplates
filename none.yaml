@@ -128,7 +128,6 @@ resources:
   server_port:
     type: OS::Neutron::Port
     properties:
-    condition: defaultsg
       network_id: { get_param: internalNet }
       fixed_ips:
         - subnet_id: { get_param: internalSubnet  }
@@ -137,11 +136,11 @@ resources:
       
       security_groups:
         - { get_resource: security_group }
+    condition: defaultsg
 
   server_port:
     type: OS::Neutron::Port
     properties:
-    condition: custom
       network_id: { get_param: internalNet }
       fixed_ips:
         - subnet_id: { get_param: internalSubnet  }
@@ -150,6 +149,7 @@ resources:
       
       security_groups:
         - { get_param: security_group_id }
+    condition: custom
 
 
   server:
