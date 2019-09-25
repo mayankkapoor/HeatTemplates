@@ -317,8 +317,8 @@ resources:
             chmod 400 /root/keys/mongo-keyfile
             chown 999:999 /root/keys/mongo-keyfile
 
-            docker pull mongo
-            docker run --name mongo-node -d -v ~/mongo:/data/db -p 27017:27017 mongo --replSet "rs0"
+            docker pull mongo:4.2.0
+            docker run --name mongo-node -d -v ~/mongo:/data/db -p 27017:27017 mongo:4.2.0 --replSet "rs0"
             cat << EOF > /tmp/config.py
 
             #!/usr/bin/python
@@ -346,8 +346,8 @@ resources:
             docker rm -f mongo-node
             docker run --name mongo-node --restart always  -d  -v ~/mongo:/data/db -v /root/keys/:/opt/mongo  -p 27017:27017 mongo --auth --keyFile /opt/mongo/mongo-keyfile --replSet "rs0"
             sleep 2
-            docker -H $ip2 run --name mongo-node --restart always -d -v ~/mongo:/data/db -v /root/keys/:/opt/mongo  -p 27017:27017 mongo --auth --keyFile /opt/mongo/mongo-keyfile --replSet "rs0"
-            docker -H $ip3 run --name mongo-node --restart always -d -v ~/mongo:/data/db -v /root/keys/:/opt/mongo  -p 27017:27017 mongo --auth --keyFile /opt/mongo/mongo-keyfile --replSet "rs0"
+            docker -H $ip2 run --name mongo-node --restart always -d -v ~/mongo:/data/db -v /root/keys/:/opt/mongo  -p 27017:27017 mongo:4.2.0 --auth --keyFile /opt/mongo/mongo-keyfile --replSet "rs0"
+            docker -H $ip3 run --name mongo-node --restart always -d -v ~/mongo:/data/db -v /root/keys/:/opt/mongo  -p 27017:27017 mongo:4.2.0 --auth --keyFile /opt/mongo/mongo-keyfile --replSet "rs0"
 
             export http_proxy=http://$proxy_host:$proxy_port
             export https_proxy=http://$proxy_host:$proxy_port
@@ -452,7 +452,8 @@ resources:
             echo $key >> /root/keys/mongo-keyfile
             chmod 400 /root/keys/mongo-keyfile
             chown 999:999 /root/keys/mongo-keyfile
-            docker run --name mongo-node -d -v /etc/hosts:/etc/hosts -v ~/mongo:/data/db -p 27017:27017 mongo --replSet "rs0"
+            docker pull mongo:4.2.0
+            docker run --name mongo-node -d -v /etc/hosts:/etc/hosts -v ~/mongo:/data/db -p 27017:27017 mongo:4.2.0  --replSet "rs0"
 
 
             # Installing Telegraf agent
@@ -554,7 +555,8 @@ resources:
             echo $key >> /root/keys/mongo-keyfile
             chmod 400 /root/keys/mongo-keyfile
             chown 999:999 /root/keys/mongo-keyfile
-            docker run --name mongo-node -d -v /etc/hosts:/etc/hosts -v ~/mongo:/data/db -p 27017:27017 mongo --replSet "rs0"
+            docker pull
+            docker run --name mongo-node -d -v /etc/hosts:/etc/hosts -v ~/mongo:/data/db -p 27017:27017 mongo:4.2.0 --replSet "rs0"
 
             # Installing Telegraf agent
             curl -L -O https://dl.influxdata.com/telegraf/releases/telegraf_1.10.3-1_amd64.deb
@@ -587,6 +589,9 @@ outputs:
   db_engine: 
     description: Database engine name
     value: MongoDB
+  db_engine_version: 
+    description: Database Version
+    value: MongoDB v4.2.0
   keypair: 
     description: Keypair to connect to Database instances
     value: { get_param: key }
