@@ -3,6 +3,10 @@ description: >
   creating nodejs stack
 
 parameters:
+  sg_type:
+    type: string
+    default: default
+
   key:
     type: string
     description: >
@@ -65,6 +69,11 @@ parameters:
     default: false
 
 
+conditions:
+  custom: {equals: [{get_param: sg_type}, "custom"]}
+  default: {equals: [{get_param: sg_type}, "default"]}
+
+
 
 
 resources:
@@ -92,6 +101,7 @@ resources:
               "ethertype": IPv4,
               "protocol": tcp}
             ]
+    condition: default
 
   server_port:
     type: OS::Neutron::Port
@@ -99,8 +109,8 @@ resources:
       network_id: { get_param: internalNet }
       fixed_ips:
         - subnet_id: { get_param: internalSubnet  }
-      security_groups:
-        - { get_resource: security_group }
+      security_groups: 
+        - { if: ["custom", { get_param: securityGroup }, { get_resource: security_group } ] }
 
 
   server:

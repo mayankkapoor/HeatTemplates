@@ -2,6 +2,10 @@ heat_template_version: 2015-04-30
 description: >
   creating lamp stack linux, apache mysql and php
 parameters:
+  sg_type:
+    type: string
+    default: default
+
   key:
     type: string
     description: >
@@ -63,6 +67,10 @@ parameters:
     type: boolean
     default: false
 
+conditions:
+  custom: {equals: [{get_param: sg_type}, "custom"]}
+  default: {equals: [{get_param: sg_type}, "default"]}
+
 
 
 
@@ -103,6 +111,8 @@ resources:
               "protocol": tcp}
 
             ]
+    condition: default
+
 
   server_port:
     type: OS::Neutron::Port
@@ -111,7 +121,7 @@ resources:
       fixed_ips:
         - subnet_id: { get_param: internalSubnet  }
       security_groups:
-        - { get_resource: security_group }
+        - { if: ["custom", { get_param: securityGroup }, { get_resource: security_group } ] }
 
 
   server:
