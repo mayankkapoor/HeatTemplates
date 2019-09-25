@@ -551,6 +551,9 @@ outputs:
   db_engine: 
     description: Database engine name
     value: Postgres
+  db_engine_version: 
+    description: Database Version
+    value: PostgreSQL v9.4.17
   keypair: 
     description: Keypair to connect to Database instances
     value: { get_param: key }
