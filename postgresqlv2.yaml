@@ -588,7 +588,8 @@ outputs:
     description: PostgreSQL connection url
     value:
       str_replace:
-        template: postgresql://$host3:5432/$db
+        template: postgresql://postgres:$pass@$host3:5432/$db
         params:
           $host3: { get_attr: [proxy_floatingip, floating_ip_address] }
+          $pass: { get_param: db_pass }
           $db: { get_param: custom_db }
