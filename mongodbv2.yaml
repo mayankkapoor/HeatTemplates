@@ -339,7 +339,7 @@ resources:
             docker -H $ip2 rm -f mongo-node
             docker -H $ip3 rm -f mongo-node
             docker rm -f mongo-node
-            docker run --name mongo-node --restart always  -d  -v ~/mongo:/data/db -v /root/keys/:/opt/mongo  -p 27017:27017 mongo --auth --keyFile /opt/mongo/mongo-keyfile --replSet "rs0"
+            docker run --name mongo-node --restart always  -d  -v ~/mongo:/data/db -v /root/keys/:/opt/mongo  -p 27017:27017 mongo:4.2.0 --auth --keyFile /opt/mongo/mongo-keyfile --replSet "rs0"
 
             docker -H $ip2 run --name mongo-node --restart always -d -v ~/mongo:/data/db -v /root/keys/:/opt/mongo  -p 27017:27017 mongo:4.2.0 --auth --keyFile /opt/mongo/mongo-keyfile --replSet "rs0"
             docker -H $ip3 run --name mongo-node --restart always -d -v ~/mongo:/data/db -v /root/keys/:/opt/mongo  -p 27017:27017 mongo:4.2.0 --auth --keyFile /opt/mongo/mongo-keyfile --replSet "rs0"
@@ -552,7 +552,7 @@ resources:
             echo $key >> /root/keys/mongo-keyfile
             chmod 400 /root/keys/mongo-keyfile
             chown 999:999 /root/keys/mongo-keyfile
-            docker pull
+            docker pull mongo:4.2.0 
             docker run --name mongo-node -d -v /etc/hosts:/etc/hosts -v ~/mongo:/data/db -p 27017:27017 mongo:4.2.0 --replSet "rs0"
 
             # Installing Telegraf agent
