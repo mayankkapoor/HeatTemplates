@@ -327,13 +327,7 @@ resources:
             client = pymongo.MongoClient('mongodb://localhost:27017/')
             config = {"_id":"rs0","members":[{"_id":0,"host": "$ip1:27017" },{"_id":1,"host": "$ip2:27017" },{"_id":2,"host": "$ip3:27017" }]}
             client.admin.command("replSetInitiate", config)
-            time.sleep(120)
-            print client.admin.command("createUser", "root", pwd="$db_pass", roles=["root"])
-            print client.admin.command("createUser", "admin", pwd="@dmin", roles=["root"])
-            mydb = client.$db
-            item = { "Name" : "Test Record" }
-            record = mydb.item
-            print record.insert_one(item)
+            time.sleep(60)
             EOF
             chmod +x /tmp/config.py
             python /tmp/config.py >> /tmp/config_output
@@ -345,10 +339,28 @@ resources:
             docker -H $ip3 rm -f mongo-node
             docker rm -f mongo-node
             docker run --name mongo-node --restart always  -d  -v ~/mongo:/data/db -v /root/keys/:/opt/mongo  -p 27017:27017 mongo --auth --keyFile /opt/mongo/mongo-keyfile --replSet "rs0"
-            sleep 30
+
             docker -H $ip2 run --name mongo-node --restart always -d -v ~/mongo:/data/db -v /root/keys/:/opt/mongo  -p 27017:27017 mongo:4.2.0 --auth --keyFile /opt/mongo/mongo-keyfile --replSet "rs0"
             docker -H $ip3 run --name mongo-node --restart always -d -v ~/mongo:/data/db -v /root/keys/:/opt/mongo  -p 27017:27017 mongo:4.2.0 --auth --keyFile /opt/mongo/mongo-keyfile --replSet "rs0"
+            sleep 60
+            
+            cat << EOF > /tmp/config2.py
 
+            #!/usr/bin/python
+            import pymongo
+            import time
+            client = pymongo.MongoClient('mongodb://root:password@$ip1:27017,$ip2:27017,$ip3:27017/?replicaSet=rs0')
+            print client.admin.command("createUser", "root", pwd="$db_pass", roles=["root"])
+            print client.admin.command("createUser", "admin", pwd="@dmin", roles=["root"])
+            mydb = client.$db
+            item = { "Name" : "Test Record" }
+            record = mydb.item
+            print record.insert_one(item)
+            time.sleep(60)
+            EOF
+            chmod +x /tmp/config.py
+            python /tmp/config2.py >> /tmp/config_output
+            
             export http_proxy=http://$proxy_host:$proxy_port
             export https_proxy=http://$proxy_host:$proxy_port
 
