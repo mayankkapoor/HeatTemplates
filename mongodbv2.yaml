@@ -264,7 +264,6 @@ resources:
             $db_pass: { get_param: db_pass }
             $commandLog: { get_param: commandLog }
             $isprodvm: { get_param: isprodvm}
-            $db: { get_param: custom_db }
             $ip1: { get_attr: [mongo1_floatingip, floating_ip_address] }
             $ip2: { get_attr: [mongo2_floatingip, floating_ip_address] }
             $ip3: { get_attr: [mongo3_floatingip, floating_ip_address] }
@@ -329,6 +328,7 @@ resources:
             client.admin.command("replSetInitiate", config)
             time.sleep(60)
             EOF
+            
             chmod +x /tmp/config.py
             python /tmp/config.py >> /tmp/config_output
             unset http_proxy https_proxy
@@ -344,22 +344,6 @@ resources:
             docker -H $ip3 run --name mongo-node --restart always -d -v ~/mongo:/data/db -v /root/keys/:/opt/mongo  -p 27017:27017 mongo:4.2.0 --auth --keyFile /opt/mongo/mongo-keyfile --replSet "rs0"
             sleep 60
             
-            cat << EOF > /tmp/config2.py
-
-            #!/usr/bin/python
-            import pymongo
-            import time
-            client = pymongo.MongoClient('mongodb://root:password@$ip1:27017,$ip2:27017,$ip3:27017/?replicaSet=rs0')
-            print client.admin.command("createUser", "root", pwd="$db_pass", roles=["root"])
-            print client.admin.command("createUser", "admin", pwd="@dmin", roles=["root"])
-            mydb = client.$db
-            item = { "Name" : "Test Record" }
-            record = mydb.item
-            print record.insert_one(item)
-            time.sleep(60)
-            EOF
-            chmod +x /tmp/config.py
-            python /tmp/config2.py >> /tmp/config_output
             
             export http_proxy=http://$proxy_host:$proxy_port
             export https_proxy=http://$proxy_host:$proxy_port
@@ -638,9 +622,8 @@ outputs:
     description: MongoDB cluster connection url
     value:
       str_replace:
-        template: mongodb://root:$pass@$host1:27017,$host2:27017,$host3:27017/?replicaSet=rs0
+        template: mongodb://$host1:27017,$host2:27017,$host3:27017/?replicaSet=rs0
         params:
-          $pass: { get_param: db_pass }
           $host1: { get_attr: [mongo1_floatingip, floating_ip_address] }
           $host2: { get_attr: [mongo2_floatingip, floating_ip_address] }
           $host3: { get_attr: [mongo3_floatingip, floating_ip_address] }
