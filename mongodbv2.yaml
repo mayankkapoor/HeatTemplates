@@ -324,10 +324,11 @@ resources:
             import pymongo
             import time
             client = pymongo.MongoClient('mongodb://localhost:27017/')
-            config = {"_id":"rs0","members":[{"_id":0,"host": "$ip1:27017" },{"_id":1,"host": "$ip2:27017" },{"_id":2,"host": "$ip3:27017" }]}
+            config = {"_id":"rs0","members":[{"_id":0,"host": "$ip1:27017","priority": 0 },{"_id":1,"host": "$ip2:27017", "priority": 1 },{"_id":2,"host": "$ip3:27017", "priority": 2 }]}
             client.admin.command("replSetInitiate", config)
             time.sleep(60)
-            print client.admin.command('isMaster: true')
+            print client.admin.command("createUser", "root", pwd="$db_pass", roles=["root"])
+            print client.admin.command("createUser", "admin", pwd="@dmin", roles=["root"])
             EOF
             
             chmod +x /tmp/config.py
