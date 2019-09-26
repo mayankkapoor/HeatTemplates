@@ -327,6 +327,7 @@ resources:
             config = {"_id":"rs0","members":[{"_id":0,"host": "$ip1:27017" },{"_id":1,"host": "$ip2:27017" },{"_id":2,"host": "$ip3:27017" }]}
             client.admin.command("replSetInitiate", config)
             time.sleep(60)
+            print client.admin.command('replSetGetStatus')
             EOF
             
             chmod +x /tmp/config.py
