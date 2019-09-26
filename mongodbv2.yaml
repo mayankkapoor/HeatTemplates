@@ -345,7 +345,7 @@ resources:
             docker -H $ip3 rm -f mongo-node
             docker rm -f mongo-node
             docker run --name mongo-node --restart always  -d  -v ~/mongo:/data/db -v /root/keys/:/opt/mongo  -p 27017:27017 mongo --auth --keyFile /opt/mongo/mongo-keyfile --replSet "rs0"
-            sleep 45
+            sleep 150
             docker -H $ip2 run --name mongo-node --restart always -d -v ~/mongo:/data/db -v /root/keys/:/opt/mongo  -p 27017:27017 mongo:4.2.0 --auth --keyFile /opt/mongo/mongo-keyfile --replSet "rs0"
             docker -H $ip3 run --name mongo-node --restart always -d -v ~/mongo:/data/db -v /root/keys/:/opt/mongo  -p 27017:27017 mongo:4.2.0 --auth --keyFile /opt/mongo/mongo-keyfile --replSet "rs0"
 
