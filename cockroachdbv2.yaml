@@ -92,7 +92,12 @@ resources:
       properties:
           length: 4
           sequence: lowercase
-
+  random_string4:
+    type: OS::Heat::RandomString
+    properties:
+      length: 4
+      sequence: lowercase
+        
   roach1_name:
       type: OS::Heat::Value
       depends_on: random_string1
@@ -126,7 +131,17 @@ resources:
                       $random: { get_resource: random_string3 }
 
 
-
+  proxy_name:
+    type: OS::Heat::Value
+    depends_on: random_string4
+    properties:
+      value:
+        str_replace:
+          template: dbaas-$prefix-$random
+          params:
+            $prefix: { get_param: stack_name }
+            $random: { get_resource: random_string4 }
+            
   random_string_sg:
       type: OS::Heat::RandomString
       properties:
@@ -191,7 +206,17 @@ resources:
           security_groups:
             - { get_resource: security_group }
 
-
+  port4:
+    type: OS::Neutron::Port
+    depends_on: security_group
+    properties:
+      admin_state_up: true
+      network: { get_param: network_name }
+      fixed_ips: 
+        - subnet_id: { get_param: subnet_name }
+      security_groups: 
+        - { get_resource: security_group }
+        
   roach1_floatingip:
       type: OS::Neutron::FloatingIP
       depends_on: port1
@@ -213,6 +238,13 @@ resources:
           floating_network_id: { get_param: public_network_id }
           port_id: { get_resource: port3 }
 
+  proxy_floatingip:
+    type: OS::Neutron::FloatingIP
+    depends_on: port4
+    properties:
+      floating_network_id: { get_param: public_network_id }
+      port_id: { get_resource: port4 }
+      
   roach1_volume:
       type: OS::Cinder::Volume
       properties:
@@ -548,13 +580,14 @@ resources:
             systemctl restart telegraf
 
 
+
   proxy:
     type: OS::Nova::Server
     depends_on: port4
     properties:
+      name: { get_attr: [proxy_name, value] }
       flavor: { get_param: flavor }
       key_name: { get_param: key }
-      availability_zone: { get_param: az3 }
       block_device_mapping_v2:
         - device_name: vda
           image: { get_param: image }
@@ -563,19 +596,19 @@ resources:
       networks:
         - port: { get_resource: port4 }
       user_data_format: RAW
+      metadata: { db_instance: true }
       user_data:
         str_replace:
           params:
             $proxy_host: { get_param: proxy_host }
             $proxy_port: { get_param: proxy_port }
             $commandLog: { get_param: commandLog }
+            $isprodvm: { get_param: isprodvm}
             $ip1: { get_attr: [ port1, fixed_ips, 0, ip_address ]}
             $ip2: { get_attr: [ port2, fixed_ips, 0, ip_address ]}
-            $ip3: { get_attr: [ port3, fixed_ips, 0, ip_address ]}
-
           template: |
             #!/bin/bash
-
+            
             rm -rf /var/lib/apt/lists/lock
             export http_proxy=http://$proxy_host:$proxy_port
             export https_proxy=http://$proxy_host:$proxy_port
