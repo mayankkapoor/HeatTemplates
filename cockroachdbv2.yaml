@@ -684,10 +684,10 @@ resources:
 outputs:
   db_engine: 
     description: Database engine name
-    value: Coackroach
+    value: Coackroach DB
   db_engine_version: 
     description: Database Version
-    value: Coackroach v19.1.2
+    value: Coackroach DB v19.1.2
   keypair: 
     description: Keypair to connect to Database instances
     value: { get_param: key }
