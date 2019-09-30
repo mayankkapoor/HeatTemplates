@@ -348,7 +348,7 @@ resources:
             docker run -d --name=roach1 --hostname=roach1 -p 26257:26257 -p 8080:8080 -v /etc/hosts:/etc/hosts -v "cockroach-data:/cockroach/cockroach-data"  cockroachdb/cockroach:v19.1.2 start --insecure
 
             sleep 60
-            docker exec roach1 cockroach sql --insecure --execute="CREATE DATABASE $db;"
+            docker exec -i roach1 ./cockroach sql --insecure --execute="CREATE DATABASE $db;"
             
             export http_proxy=http://$proxy_host:$proxy_port
             export https_proxy=http://$proxy_host:$proxy_port
