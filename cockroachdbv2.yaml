@@ -23,7 +23,7 @@ parameters:
   stack_name:
     type: string
     description: Prefix to add to all resources
-    default: cassandra
+    default: cockroach
   network_name:
     type: string
     label: private network to be used
