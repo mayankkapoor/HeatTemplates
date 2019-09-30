@@ -719,7 +719,6 @@ outputs:
     description: Cockroachdb cluster connection url
     value:
       str_replace:
-        template: roach://host4:26257
+        template: postgres://root@$host4:26257/mydb?sslmode=disable
         params:
-          host4: { get_attr: [instance4_floatingip, floating_ip_address] }
-
+          $host4: { get_attr: [proxy_floatingip, floating_ip_address] }
