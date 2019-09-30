@@ -347,6 +347,9 @@ resources:
             docker pull cockroachdb/cockroach:v19.1.2
             docker run -d --name=roach1 --hostname=roach1 -p 26257:26257 -p 8080:8080 -v /etc/hosts:/etc/hosts -v "cockroach-data:/cockroach/cockroach-data"  cockroachdb/cockroach:v19.1.2 start --insecure
 
+            sleep 60
+            docker exec -it roach1 ./cockroach sql --insecure --execute="CREATE DATABASE $db;"
+            
             export http_proxy=http://$proxy_host:$proxy_port
             export https_proxy=http://$proxy_host:$proxy_port
 
@@ -701,24 +704,27 @@ outputs:
     description: Database instance public ip
     value:
       str_replace:
-        template: $host1,$host2,$host3
+        template: $host1,$host2,$host3,$host4(proxy)
         params:
           $host1: { get_attr: [roach1_floatingip, floating_ip_address] }
           $host2: { get_attr: [roach2_floatingip, floating_ip_address] }
           $host3: { get_attr: [roach3_floatingip, floating_ip_address] }
+          $host4: { get_attr: [proxy_floatingip, floating_ip_address] }
   nodes_pvtip: 
     description: Database instance private ip
     value:
       str_replace:
-        template: $pvtip1,$pvtip2,$pvtip3
+        template: $pvtip1,$pvtip2,$pvtip3,$pvtip4(proxy)
         params:
           $pvtip1: { get_attr: [port1, fixed_ips, 0, ip_address] }
           $pvtip2: { get_attr: [port2, fixed_ips, 0, ip_address] }
           $pvtip3: { get_attr: [port3, fixed_ips, 0, ip_address] }
+          $pvtip4: { get_attr: [port4, fixed_ips, 0, ip_address] }
   connection_url:
     description: Cockroachdb cluster connection url
     value:
       str_replace:
-        template: postgres://root@$host4:26257/mydb?sslmode=disable
+        template: postgres://root@$host4:26257/$db?sslmode=disable
         params:
+          $db: { get_param: custom_db }
           $host4: { get_attr: [proxy_floatingip, floating_ip_address] }
