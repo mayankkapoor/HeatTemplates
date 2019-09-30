@@ -609,6 +609,7 @@ resources:
             $isprodvm: { get_param: isprodvm}
             $ip1: { get_attr: [ port1, fixed_ips, 0, ip_address ]}
             $ip2: { get_attr: [ port2, fixed_ips, 0, ip_address ]}
+            $ip3: { get_attr: [ port3, fixed_ips, 0, ip_address ]}
           template: |
             #!/bin/bash
             
