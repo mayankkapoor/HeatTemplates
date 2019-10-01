@@ -88,7 +88,7 @@ resources:
     type: OS::Neutron::SecurityGroup
     properties:
       name: { get_param: securityGroup }
-      description: This is a default Sg, will be deleted when stack is terminated.
+      description: Default security group created by JAWS console
       rules: [
              {"direction": ingress,
               "remote_ip_prefix": 0.0.0.0/0,
