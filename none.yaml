@@ -1,8 +1,11 @@
-heat_template_version: 2016-10-14
+heat_template_version: 2013-05-23
+
+
 description: >
   Create a simple VM using Heat
-parameters:
 
+
+parameters:
   sg_type:
     type: string
     default: default
@@ -73,9 +76,6 @@ parameters:
     type: boolean
     default: false
 
-#   environment:
-#     type: string
-#     default: development  
 
 conditions:
   custom: {equals: [{get_param: sg_type}, "custom"]}
@@ -83,7 +83,6 @@ conditions:
 
 
 resources:
-
   security_group:
     type: OS::Neutron::SecurityGroup
     properties:
@@ -110,8 +109,7 @@ resources:
               "protocol": tcp}
 
             ]
-    condition: default   
-    
+    condition: default
 
   server_port:
     type: OS::Neutron::Port
@@ -119,10 +117,8 @@ resources:
       network_id: { get_param: internalNet }
       fixed_ips:
         - subnet_id: { get_param: internalSubnet  }
-      security_groups: 
+      security_groups:
         - { if: ["custom", { get_param: securityGroup }, { get_resource: security_group } ] }
-      
-
 
   server:
     type: OS::Nova::Server
@@ -137,9 +133,6 @@ resources:
         - device_name: vda
           volume_id: { get_resource: bootable_volume }
           delete_on_termination: True
-#     metadata:
-#       env: local
-
 
       user_data:
         str_replace:
@@ -252,7 +245,6 @@ resources:
             $commandLog: { get_param: commandLog }
             $serverName: { get_param: serverName }
 
-
   server_floating_ip:
     type: OS::Nova::FloatingIP
     properties:
@@ -271,7 +263,6 @@ resources:
       size: { get_param: volumeSize }
       availability_zone: { get_param: availabilityZone }
       image: { get_param: bootImage }
-
 
 
 outputs:
