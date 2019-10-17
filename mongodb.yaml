@@ -266,6 +266,7 @@ resources:
             $key: { get_resource: random_string_mongo }
             $proxy_host: { get_param: proxy_host }
             $proxy_port: { get_param: proxy_port }
+            $db: { get_param: custom_db }
             $db_pass: { get_param: db_pass }
             $commandLog: { get_param: commandLog }
             $isprodvm: { get_param: isprodvm}
@@ -335,6 +336,10 @@ resources:
             time.sleep(60)
             print client.admin.command("createUser", "root", pwd="$db_pass", roles=["root"])
             print client.admin.command("createUser", "admin", pwd="@dmin", roles=["root"])
+            mydb = client.$db
+            item = { "Name" : "Test Record" }
+            record = mydb.item
+            print record.insert_one(item)
             EOF
             
             chmod +x /tmp/config.py
