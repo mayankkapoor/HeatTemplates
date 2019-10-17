@@ -24,7 +24,7 @@ chmod +x ./jq
 mv jq /usr/bin
 echo "serverid=$(sudo curl GET  -s 'http://169.254.169.254/openstack/latest/meta_data.json' |jq -r '.uuid' )" >> /etc/default/telegraf
 mv /etc/telegraf/telegraf.conf /etc/telegraf/telegraf-orig.conf
-curl -o /etc/telegraf/telegraf.conf https://raw.githubusercontent.com/mayankkapoor/statuscheck/master/telegraf_prod.conf
-curl -o /etc/telegraf/longrunning.sh https://raw.githubusercontent.com/mayankkapoor/statuscheck/master/longrunning.sh
-curl -o /etc/telegraf/commands.sh https://raw.githubusercontent.com/mayankkapoor/statuscheck/master/commands.sh
+curl -o /etc/telegraf/telegraf.conf https://raw.githubusercontent.com/mayankkapoor/statuscheck/staging/telegraf_prod.conf
+curl -o /etc/telegraf/longrunning.sh https://raw.githubusercontent.com/mayankkapoor/statuscheck/staging/longrunning.sh
+curl -o /etc/telegraf/commands.sh https://raw.githubusercontent.com/mayankkapoor/statuscheck/staging/commands.sh
 service telegraf restart
