@@ -74,12 +74,17 @@ parameters:
   commandLog:
     type: boolean
     default: false
+    
+  snapshot:
+    type: string
+    default: nosnapshot
 
 
 conditions:
   custom: {equals: [{get_param: sg_type}, "custom"]}
   default: {equals: [{get_param: sg_type}, "default"]}
-
+  snapshot: {equals: [{get_param: snapshot}, "imagesnap"]}
+  nosnapshot: {equals: [{get_param: snapshot}, "nosnapshot"]}
 
 resources:
   security_group:
@@ -119,7 +124,7 @@ resources:
       security_groups:
         - { if: ["custom", { get_param: securityGroup }, { get_resource: security_group } ] }
 
-  server:
+  server1:
     type: OS::Nova::Server
     properties:
       name: { get_param: serverName }
@@ -132,7 +137,6 @@ resources:
         - device_name: vda
           volume_id: { get_resource: bootable_volume }
           delete_on_termination: True
-
       user_data:
         str_replace:
           template: |
@@ -142,10 +146,10 @@ resources:
             rm -rf /var/lib/apt/lists/lock
             export http_proxy=$proxy
             export https_proxy=$proxy
-            export no_proxy=127.0.0.1,localhost,10,192.168,.jio.com
+            export no_proxy=127.0.0.1,localhost,10,192.168
             echo "export http_proxy=$proxy" >> /etc/profile.d/proxy.sh
             echo "export https_proxy=$proxy" >> /etc/profile.d/proxy.sh
-            echo "export no_proxy=127.0.0.1,localhost,10,192.168,.jio.com" >> /etc/profile.d/proxy.sh
+            echo "export no_proxy=127.0.0.1,localhost,10,192.168" >> /etc/profile.d/proxy.sh
 
             # Update sources.list based on bootImage
             if [ $bootImage = "Ubuntu1604" ]
@@ -229,12 +233,12 @@ resources:
             mv /etc/telegraf/telegraf.conf /etc/telegraf/telegraf-orig.conf
             if [ $isprodvm = "non-prod" ]
             then
-              curl -o /etc/telegraf/telegraf.conf https://raw.githubusercontent.com/mayankkapoor/statuscheck/test/telegraf_nonprod.conf
+              curl -o /etc/telegraf/telegraf.conf https://raw.githubusercontent.com/mayankkapoor/statuscheck/staging/telegraf_nonprod.conf
             else
-              curl -o /etc/telegraf/telegraf.conf https://raw.githubusercontent.com/mayankkapoor/statuscheck/test/telegraf_prod.conf
+              curl -o /etc/telegraf/telegraf.conf https://raw.githubusercontent.com/mayankkapoor/statuscheck/staging/telegraf_prod.conf
             fi
-            curl -o /etc/telegraf/longrunning.sh https://raw.githubusercontent.com/mayankkapoor/statuscheck/test/longrunning.sh
-            curl -o /etc/telegraf/commands.sh https://raw.githubusercontent.com/mayankkapoor/statuscheck/test/commands.sh
+            curl -o /etc/telegraf/longrunning.sh https://raw.githubusercontent.com/mayankkapoor/statuscheck/staging/longrunning.sh
+            curl -o /etc/telegraf/commands.sh https://raw.githubusercontent.com/mayankkapoor/statuscheck/staging/commands.sh
             service telegraf $istelegrafon
           params:
             $proxy: { get_param: proxy_ip }
@@ -243,17 +247,148 @@ resources:
             $isprodvm: { get_param: isprodvm }
             $commandLog: { get_param: commandLog }
             $serverName: { get_param: serverName }
+    condition: nosnapshot
+
+  server2:
+    type: OS::Nova::Server
+    properties:
+      name: { get_param: serverName }
+      image: { get_param: bootImage }
+      availability_zone: { get_param: vmAvailabilityZone }
+      key_name: { get_param: key }
+      flavor: { get_param: flavor}
+      networks:
+        - port: { get_resource: server_port }
+      user_data:
+        str_replace:
+          template: |
+            #!/bin/bash -v
+            sudo -i
+            echo "127.0.1.1 $serverName" >> /etc/hosts
+            rm -rf /var/lib/apt/lists/lock
+            export http_proxy=$proxy
+            export https_proxy=$proxy
+            export no_proxy=127.0.0.1,localhost,10,192.168
+            echo "export http_proxy=$proxy" >> /etc/profile.d/proxy.sh
+            echo "export https_proxy=$proxy" >> /etc/profile.d/proxy.sh
+            echo "export no_proxy=127.0.0.1,localhost,10,192.168" >> /etc/profile.d/proxy.sh
+
+            # Update sources.list based on bootImage
+            if [ $bootImage = "Ubuntu1604" ]
+            then
+              echo  > /etc/apt/sources.list
+              echo "###### Ubuntu Main Repos" >> /etc/apt/sources.list
+              echo "deb http://in.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse"  >> /etc/apt/sources.list
+              echo "deb-src http://in.archive.ubuntu.com/ubuntu/ xenial main restricted universe multiverse" >> /etc/apt/sources.list
+              echo "###### Ubuntu Update Repos" >> /etc/apt/sources.list
+              echo "deb http://in.archive.ubuntu.com/ubuntu/ xenial-security main restricted universe multiverse" >> /etc/apt/sources.list
+              echo "deb http://in.archive.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse" >> /etc/apt/sources.list
+              echo "deb-src http://in.archive.ubuntu.com/ubuntu/ xenial-security main restricted universe multiverse" >> /etc/apt/sources.list
+              echo "deb-src http://in.archive.ubuntu.com/ubuntu/ xenial-updates main restricted universe multiverse"  >> /etc/apt/sources.list
+            elif [ $bootImage = "Ubuntu1804" ]
+            then
+              echo  > /etc/apt/sources.list
+              echo "###### Ubuntu Main Repos" >> /etc/apt/sources.list
+              echo "deb http://in.archive.ubuntu.com/ubuntu/ bionic main restricted universe multiverse"  >> /etc/apt/sources.list
+              echo "deb-src http://in.archive.ubuntu.com/ubuntu/ bionic main restricted universe multiverse" >> /etc/apt/sources.list
+              echo "###### Ubuntu Update Repos" >> /etc/apt/sources.list
+              echo "deb http://in.archive.ubuntu.com/ubuntu/ bionic-security main restricted universe multiverse" >> /etc/apt/sources.list
+              echo "deb http://in.archive.ubuntu.com/ubuntu/ bionic-updates main restricted universe multiverse" >> /etc/apt/sources.list
+              echo "deb-src http://in.archive.ubuntu.com/ubuntu/ bionic-security main restricted universe multiverse" >> /etc/apt/sources.list
+              echo "deb-src http://in.archive.ubuntu.com/ubuntu/ bionic-updates main restricted universe multiverse"  >> /etc/apt/sources.list
+            else
+              echo "sources.list was not updated based on bootImage"
+            fi
+            ################ Telegraf agent install
+            if [ $bootImage = "Ubuntu1604" ] || [ $bootImage = "Ubuntu1804" ]
+            then
+              curl -L -O https://dl.influxdata.com/telegraf/releases/telegraf_1.10.3-1_amd64.deb
+              dpkg -i telegraf_1.10.3-1_amd64.deb
+              # Snoopy dependency install
+              if [ $commandLog = True ]
+              then
+                apt-get update -y
+                apt-get install libtool-bin -y
+              fi
+            elif [ $bootImage = "Centos-7.5" ] || [ $bootImage = "RHEL-7.5" ]
+            then
+              curl -L -O https://dl.influxdata.com/telegraf/releases/telegraf-1.10.3-1.x86_64.rpm
+              yum localinstall telegraf-1.10.3-1.x86_64.rpm -y
+              # Snoopy dependency install
+              if [ $commandLog = True ]
+              then
+                yum update -y
+                yum install libtool -y
+                sed -i -e 's/secure/auth.log/' /etc/rsyslog.conf
+                service rsyslog restart
+              fi
+            else
+              echo "Unknown image, assuming debian OS"
+              curl -L -O https://dl.influxdata.com/telegraf/releases/telegraf_1.10.3-1_amd64.deb
+              dpkg -i telegraf_1.10.3-1_amd64.deb
+              # Snoopy dependency install
+              if [ $commandLog = True ]
+              then
+                apt-get update -y
+                apt-get install libtool-bin -y
+              fi
+            fi
+
+            ################snoopy install
+            if [ $commandLog = True ]
+            then
+              rm -f snoopy-install.sh
+              curl -L -o snoopy-install.sh https://github.com/a2o/snoopy/raw/install/doc/install/bin/snoopy-install.sh
+              chmod 755 snoopy-install.sh
+              ./snoopy-install.sh git-master
+              chmod -R 755 /var/log/auth.log
+              snoopy-enable
+            else
+              echo "snoopy not installed"
+            fi
+
+            ################# Telegraf agent config
+            curl -L -o jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
+            chmod +x ./jq
+            mv jq /usr/bin
+            echo "serverid=$(sudo curl GET  -s 'http://169.254.169.254/openstack/latest/meta_data.json' |jq -r '.uuid' )" >> /etc/default/telegraf
+            mv /etc/telegraf/telegraf.conf /etc/telegraf/telegraf-orig.conf
+            if [ $isprodvm = "non-prod" ]
+            then
+              curl -o /etc/telegraf/telegraf.conf https://raw.githubusercontent.com/mayankkapoor/statuscheck/staging/telegraf_nonprod.conf
+            else
+              curl -o /etc/telegraf/telegraf.conf https://raw.githubusercontent.com/mayankkapoor/statuscheck/staging/telegraf_prod.conf
+            fi
+            curl -o /etc/telegraf/longrunning.sh https://raw.githubusercontent.com/mayankkapoor/statuscheck/staging/longrunning.sh
+            curl -o /etc/telegraf/commands.sh https://raw.githubusercontent.com/mayankkapoor/statuscheck/staging/commands.sh
+            service telegraf $istelegrafon
+          params:
+            $proxy: { get_param: proxy_ip }
+            $istelegrafon: { get_param: istelegrafon }
+            $bootImage: { get_param: bootImage }
+            $isprodvm: { get_param: isprodvm }
+            $commandLog: { get_param: commandLog }
+            $serverName: { get_param: serverName }
+    condition: snapshot
 
   server_floating_ip:
     type: OS::Nova::FloatingIP
     properties:
       pool: { get_param: public_net}
 
-  associate_floating_ip:
+  associate_floating_ip1:
     type: OS::Nova::FloatingIPAssociation
     properties:
       floating_ip: { get_resource: server_floating_ip}
-      server_id: { get_resource: server}
+      server_id: { get_resource: server1}
+    condition: nosnapshot
+
+  associate_floating_ip2:
+    type: OS::Nova::FloatingIPAssociation
+    properties:
+      floating_ip: { get_resource: server_floating_ip}
+      server_id: { get_resource: server2}
+    condition: snapshot
 
   bootable_volume:
     type: OS::Cinder::Volume
@@ -262,9 +397,11 @@ resources:
       size: { get_param: volumeSize }
       availability_zone: { get_param: availabilityZone }
       image: { get_param: bootImage }
+    condition: nosnapshot
 
 
 outputs:
   network:
     description: ip address of vm
-    value: { get_attr: [ server, networks ] }
+    value:
+      - { if: ["snapshot", { get_attr: [ server2, networks ] }, { get_attr: [ server1, networks ] } ] }
