@@ -554,7 +554,7 @@ resources:
             EOF
             
             mkdir -p /root/cassandra-config
-            wget https://raw.githubusercontent.com/Mohamedji/HeatTemplates/master/cassandra.yaml -O /root/cassandra-config/cassandra.yaml
+            wget https://raw.githubusercontent.com/mayankkapoor/HeatTemplates/master/cassandra-config.yaml -O /root/cassandra-config/cassandra.yaml
             sed -i 's/master_ip/$ip1/g' /root/cassandra-config/cassandra.yaml
             sed -i 's/node_ip/$ip3/g' /root/cassandra-config/cassandra.yaml
             
@@ -577,12 +577,12 @@ resources:
             mv /etc/telegraf/telegraf.conf /etc/telegraf/telegraf-orig.conf
             if [ $isprodvm = "non-prod" ]
             then
-              curl -o /etc/telegraf/telegraf.conf https://raw.githubusercontent.com/mayankkapoor/statuscheck/test/telegraf_nonprod.conf
+              curl -o /etc/telegraf/telegraf.conf https://raw.githubusercontent.com/mayankkapoor/statuscheck/master/telegraf_nonprod.conf
             else
-              curl -o /etc/telegraf/telegraf.conf https://raw.githubusercontent.com/mayankkapoor/statuscheck/test/telegraf_prod.conf
+              curl -o /etc/telegraf/telegraf.conf https://raw.githubusercontent.com/mayankkapoor/statuscheck/master/telegraf_prod.conf
             fi
-            curl -o /etc/telegraf/longrunning.sh https://raw.githubusercontent.com/mayankkapoor/statuscheck/test/longrunning.sh
-            curl -o /etc/telegraf/commands.sh https://raw.githubusercontent.com/mayankkapoor/statuscheck/test/commands.sh
+            curl -o /etc/telegraf/longrunning.sh https://raw.githubusercontent.com/mayankkapoor/statuscheck/master/longrunning.sh
+            curl -o /etc/telegraf/commands.sh https://raw.githubusercontent.com/mayankkapoor/statuscheck/master/commands.sh
 
             if [ $istelegrafon = "stop" ]
             then
