@@ -1,0 +1,641 @@
+heat_template_version: 2017-02-24
+description: >
+  This template deploys CassandraDB cluster on Ubuntu for JAWS 
+parameters:
+  sync:
+    type: boolean
+    default: False
+  image:
+    type: string
+    default: Ubuntu1604
+    description: The Ubuntu image to use.
+  flavor:
+    type: string
+    default: m1.large
+    description: The JAWS flavour database server is to run on
+  key:
+    type: string
+    default: mj
+    description: Name of an existing KeyPair to enable SSH access to the instances
+  public_network_id:
+    type: string
+    default: non-prod2
+  stack_name:
+    type: string
+    description: Prefix to add to all resources
+    default: cassandra
+  network_name:
+    type: string
+    label: private network to be used
+    default: mj-private-network
+  subnet_name:
+    type: string
+    label: private network's subnet to be used
+    default: mj-private-subnet
+  volume_size:
+    type: number
+    description: Database volume size
+    default: 30
+  volume_type:
+    type: string
+    description: Volume type
+    default: ceph
+  proxy_host:
+    type: string
+    description: Proxy host for this environment
+    default: 10.157.240.254
+  proxy_port:
+    type: number
+    description: Proxy time for this environment
+    default: 8678
+  db_pass:
+    type: string
+    description: Password for root user
+    default: password
+    hidden: true
+  custom_db:
+    type: string
+    description: Database to be created
+    default: app
+  commandLog:
+    type: boolean
+    default: True
+  isprodvm:
+    type: string
+    default: non-prod
+  az1:
+    type: string
+    description: AZ to be used for node1
+    default: JMNG-PE3-PROD1
+  az2:
+    type: string
+    description: AZ to be used for node2
+    default: JMNG-PE3-PROD2
+  az3:
+    type: string
+    description: AZ to be used for node3
+    default: JMNG-PE3-PROD3
+
+  sg_type:
+    type: string
+    default: default
+
+  securityGroup:
+    type: string
+    description: security group name
+
+  istelegrafon:
+    type: string
+    default: stop
+
+conditions:
+  custom: {equals: [{get_param: sg_type}, "custom"]}
+  default: {equals: [{get_param: sg_type}, "default"]}
+  
+resources:
+  random_string1:
+      type: OS::Heat::RandomString
+      properties:
+          length: 4
+          sequence: lowercase
+  random_string2:
+      type: OS::Heat::RandomString
+      properties:
+          length: 4
+          sequence: lowercase
+  random_string3:
+      type: OS::Heat::RandomString
+      properties:
+          length: 4
+          sequence: lowercase
+
+  cassandra1_name:
+      type: OS::Heat::Value
+      depends_on: random_string1
+      properties:
+          value:
+              str_replace:
+                  template: dbaas-$prefix-$random
+                  params:
+                      $prefix: { get_param: stack_name }
+                      $random: { get_resource: random_string1 }
+
+  cassandra2_name:
+      type: OS::Heat::Value
+      depends_on: random_string2
+      properties:
+          value:
+              str_replace:
+                  template: dbaas-$prefix-$random
+                  params:
+                      $prefix: { get_param: stack_name }
+                      $random: { get_resource: random_string2 }
+  cassandra3_name:
+      type: OS::Heat::Value
+      depends_on: random_string3
+      properties:
+          value:
+              str_replace:
+                  template: dbaas-$prefix-$random
+                  params:
+                      $prefix: { get_param: stack_name }
+                      $random: { get_resource: random_string3 }
+
+  security_group:
+      type: OS::Neutron::SecurityGroup
+      properties:
+          name: { get_param: securityGroup }
+          rules:
+              - remote_mode: remote_group_id
+                direction: ingress
+              - remote_mode: remote_group_id
+                direction: egress
+              - direction: egress
+              - protocol: icmp
+              - port_range_min: 22
+                port_range_max: 22
+                protocol: tcp
+              - port_range_min: 7000
+                port_range_max: 7000
+                protocol: tcp
+              - port_range_min: 9042
+                port_range_max: 9042
+                protocol: tcp
+      condition: default
+      
+  port1:
+      type: OS::Neutron::Port
+      depends_on: security_group
+      properties:
+          admin_state_up: true
+          network: { get_param: network_name }
+          fixed_ips:
+            - subnet_id: { get_param: subnet_name }
+          security_groups:
+            - { if: ["custom", { get_param: securityGroup }, { get_resource: security_group } ] }
+  port2:
+      type: OS::Neutron::Port
+      depends_on: security_group
+      properties:
+          admin_state_up: true
+          network: { get_param: network_name }
+          fixed_ips:
+            - subnet_id: { get_param: subnet_name }
+          security_groups:
+            - { if: ["custom", { get_param: securityGroup }, { get_resource: security_group } ] }
+  port3:
+      type: OS::Neutron::Port
+      depends_on: security_group
+      properties:
+          admin_state_up: true
+          network: { get_param: network_name }
+          fixed_ips:
+            - subnet_id: { get_param: subnet_name }
+          security_groups:
+            - { if: ["custom", { get_param: securityGroup }, { get_resource: security_group } ] }
+
+
+  cassandra1_floatingip:
+      type: OS::Neutron::FloatingIP
+      depends_on: port1
+      properties:
+          floating_network_id: { get_param: public_network_id }
+          port_id: { get_resource: port1 }
+
+  cassandra2_floatingip:
+      type: OS::Neutron::FloatingIP
+      depends_on: port2
+      properties:
+          floating_network_id: { get_param: public_network_id }
+          port_id: { get_resource: port2 }
+
+  cassandra3_floatingip:
+      type: OS::Neutron::FloatingIP
+      depends_on: port3
+      properties:
+          floating_network_id: { get_param: public_network_id }
+          port_id: { get_resource: port3 }
+
+  cassandra1_volume:
+      type: OS::Cinder::Volume
+      properties:
+          image: { get_param: image }
+          name: { get_attr: [cassandra1_name, value] }
+          size: { get_param: volume_size }
+          volume_type: { get_param: volume_type }        
+  
+  cassandra2_volume:
+      type: OS::Cinder::Volume
+      properties:
+          image: { get_param: image }
+          name: { get_attr: [cassandra2_name, value] }
+          size: { get_param: volume_size }
+          volume_type: { get_param: volume_type }
+          
+  cassandra3_volume:
+      type: OS::Cinder::Volume
+      properties:
+          image: { get_param: image }
+          name: { get_attr: [cassandra3_name, value] }
+          size: { get_param: volume_size }
+          volume_type: { get_param: volume_type }  
+
+  cassandra1:
+    type: OS::Nova::Server
+    depends_on: port1
+    properties:
+      name: { get_attr: [cassandra1_name, value] }
+      flavor: { get_param: flavor }
+      key_name: { get_param: key }
+      availability_zone: { get_param: az1 }
+      block_device_mapping_v2:
+        - device_name: vda
+          volume_id: { get_resource: cassandra1_volume }
+          delete_on_termination: True
+      networks:
+        - port: { get_resource: port1 }
+      user_data_format: RAW
+      metadata: { db_instance: true }
+      user_data:
+        str_replace:
+          params:
+            $proxy_host: { get_param: proxy_host }
+            $proxy_port: { get_param: proxy_port }
+            $db_pass: { get_param: db_pass }
+            $commandLog: { get_param: commandLog }
+            $isprodvm: { get_param: isprodvm}
+            $db: { get_param: custom_db }
+            $ip1: { get_attr: [port1, fixed_ips, 0, ip_address] }
+            $ip2: { get_attr: [port2, fixed_ips, 0, ip_address] }
+            $ip3: { get_attr: [port3, fixed_ips, 0, ip_address] }
+            $istelegrafon : { get_param: istelegrafon }
+          template: |
+            #!/bin/bash
+            echo "$ip1  cassandra1" >> /etc/hosts
+            echo "$ip2  cassandra2" >> /etc/hosts
+            echo "$ip2  cassandra3" >> /etc/hosts
+            rm -rf /var/lib/apt/lists/lock
+            export http_proxy=http://$proxy_host:$proxy_port
+            export https_proxy=http://$proxy_host:$proxy_port
+
+            echo "export http_proxy=http://$proxy_host:$proxy_port" >> /etc/profile.d/proxy.sh
+            echo "export https_proxy=http://$proxy_host:$proxy_port" >> /etc/profile.d/proxy.sh
+
+            curl -o /etc/apt/sources.list https://raw.githubusercontent.com/mayankkapoor/HeatTemplates/master/sources.list
+
+            apt-get update 
+            # Snoopy install
+            if [ $commandLog = True ]
+            then
+               apt-get update -y
+               apt-get install libtool-bin -y
+               rm -f snoopy-install.sh
+               curl -L -o snoopy-install.sh https://github.com/a2o/snoopy/raw/install/doc/install/bin/snoopy-install.sh
+               chmod 755 snoopy-install.sh
+               ./snoopy-install.sh git-master
+               chmod -R 755 /var/log/auth.log
+               snoopy-enable
+            else
+              echo "snoopy not installed"
+            fi
+
+            # Installing Docker
+            apt-get install apt-transport-https ca-certificates curl software-properties-common -y
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+            add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+            apt update
+            apt-get install docker-ce python-pip -y
+            mkdir -p /etc/systemd/system/docker.service.d/
+            cat << EOF > /etc/systemd/system/docker.service.d/proxy.conf
+            [Service]
+            Environment="HTTP_PROXY=http://$proxy_host:$proxy_port"
+            Environment="HTTPS_PROXY=http://$proxy_host:$proxy_port"
+            EOF
+            systemctl daemon-reload && systemctl restart docker
+            systemctl enable docker
+            
+            docker pull cassandra:3.11.4
+            
+            mkdir -p /root/cassandra-data
+            mkdir -p /root/cassandra-config
+            wget https://raw.githubusercontent.com/mayankkapoor/HeatTemplates/master/cassandra-config.yaml -O /root/cassandra-config/cassandra.yaml
+            sed -i 's/master_ip/$ip1/g' /root/cassandra-config/cassandra.yaml
+            sed -i 's/node_ip/$ip1/g' /root/cassandra-config/cassandra.yaml
+            
+            docker run --restart always -d --name=cassandra1 --hostname=cassandra1 -v "/etc/hosts:/etc/hosts" -v "/root/cassandra-data:/var/lib/cassandra" -v "/root/cassandra-config/cassandra.yaml:/etc/cassandra/cassandra.yaml" -e "CASSANDRA_BROADCAST_ADDRESS=$ip1" -p 7000:7000  -p 9042:9042 cassandra:3.11.4
+
+            
+            export http_proxy=http://$proxy_host:$proxy_port
+            export https_proxy=http://$proxy_host:$proxy_port
+
+            # Installing Telegraf agent
+            curl -L -O https://dl.influxdata.com/telegraf/releases/telegraf_1.10.3-1_amd64.deb
+            dpkg -i telegraf_1.10.3-1_amd64.deb
+
+
+            # Telegraf Configuration
+            curl -L -o jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
+            chmod +x ./jq
+            mv jq /usr/bin
+            echo "serverid=$(sudo curl GET  -s 'http://169.254.169.254/openstack/latest/meta_data.json' |jq -r '.uuid' )" >> /etc/default/telegraf
+
+            mv /etc/telegraf/telegraf.conf /etc/telegraf/telegraf-orig.conf
+            if [ $isprodvm = "non-prod" ]
+            then
+              curl -o /etc/telegraf/telegraf.conf https://raw.githubusercontent.com/mayankkapoor/statuscheck/master/telegraf_nonprod.conf
+            else
+              curl -o /etc/telegraf/telegraf.conf https://raw.githubusercontent.com/mayankkapoor/statuscheck/master/telegraf_prod.conf
+            fi
+            curl -o /etc/telegraf/longrunning.sh https://raw.githubusercontent.com/mayankkapoor/statuscheck/master/longrunning.sh
+            curl -o /etc/telegraf/commands.sh https://raw.githubusercontent.com/mayankkapoor/statuscheck/master/commands.sh
+
+            if [ $istelegrafon = "stop" ]
+            then
+              systemctl $istelegrafon telegraf
+            else
+              systemctl enable telegraf
+              systemctl $istelegrafon telegraf
+            fi
+
+  cassandra2:
+    type: OS::Nova::Server
+    depends_on: [ port2, cassandra1 ]
+    properties:
+      name: { get_attr: [cassandra2_name, value] }
+      flavor: { get_param: flavor }
+      key_name: { get_param: key }
+      availability_zone: { get_param: az2 }
+      block_device_mapping_v2:
+        - device_name: vda
+          volume_id: { get_resource: cassandra2_volume }
+          delete_on_termination: True
+      networks:
+        - port: { get_resource: port2 }
+      user_data_format: RAW
+      metadata: { db_instance: true }
+      user_data:
+        str_replace:
+          params:
+            $proxy_host: { get_param: proxy_host }
+            $proxy_port: { get_param: proxy_port }
+            $db_pass: { get_param: db_pass }
+            $commandLog: { get_param: commandLog }
+            $isprodvm: { get_param: isprodvm}
+            $db: { get_param: custom_db }
+            $ip1: { get_attr: [port1, fixed_ips, 0, ip_address] }
+            $ip2: { get_attr: [port2, fixed_ips, 0, ip_address] }
+            $ip3: { get_attr: [port3, fixed_ips, 0, ip_address] }
+          template: |
+            #!/bin/bash
+            echo "$ip1  cassandra1" >> /etc/hosts
+            echo "$ip2  cassandra2" >> /etc/hosts
+            echo "$ip2  cassandra3" >> /etc/hosts
+            rm -rf /var/lib/apt/lists/lock
+            export http_proxy=http://$proxy_host:$proxy_port
+            export https_proxy=http://$proxy_host:$proxy_port
+
+            echo "export http_proxy=http://$proxy_host:$proxy_port" >> /etc/profile.d/proxy.sh
+            echo "export https_proxy=http://$proxy_host:$proxy_port" >> /etc/profile.d/proxy.sh
+
+            curl -o /etc/apt/sources.list https://raw.githubusercontent.com/mayankkapoor/HeatTemplates/master/sources.list
+
+            apt-get update
+            # Snoopy install
+            if [ $commandLog = True ]
+            then
+               apt-get update -y
+               apt-get install libtool-bin -y
+               rm -f snoopy-install.sh
+               curl -L -o snoopy-install.sh https://github.com/a2o/snoopy/raw/install/doc/install/bin/snoopy-install.sh
+               chmod 755 snoopy-install.sh
+               ./snoopy-install.sh git-master
+               chmod -R 755 /var/log/auth.log
+               snoopy-enable
+            else
+              echo "snoopy not installed"
+            fi
+
+            # Installing Docker
+            apt-get install apt-transport-https ca-certificates curl software-properties-common -y
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+            add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+            apt update
+            apt-get install docker-ce python-pip -y
+            mkdir -p /etc/systemd/system/docker.service.d/
+            cat << EOF > /etc/systemd/system/docker.service.d/proxy.conf
+            [Service]
+            Environment="HTTP_PROXY=http://$proxy_host:$proxy_port"
+            Environment="HTTPS_PROXY=http://$proxy_host:$proxy_port"
+            EOF
+            systemctl daemon-reload && systemctl restart docker
+            systemctl enable docker
+            
+            docker pull cassandra:3.11.4
+            
+            mkdir -p /root/cassandra-data
+            mkdir -p /root/cassandra-config
+            wget https://raw.githubusercontent.com/mayankkapoor/HeatTemplates/master/cassandra-config.yaml -O /root/cassandra-config/cassandra.yaml
+            sed -i 's/master_ip/$ip1/g' /root/cassandra-config/cassandra.yaml
+            sed -i 's/node_ip/$ip2/g' /root/cassandra-config/cassandra.yaml
+            
+            docker run --restart always -d --name=cassandra2 --hostname=cassandra2 -v "/etc/hosts:/etc/hosts" -v "/root/cassandra-data:/var/lib/cassandra" -v "/root/cassandra-config/cassandra.yaml:/etc/cassandra/cassandra.yaml" -e "CASSANDRA_BROADCAST_ADDRESS=$ip2" -e "CASSANDRA_SEEDS=$ip1" -p 7000:7000 -p 9042:9042 cassandra:3.11.4
+            
+            # Installing Telegraf agent
+            curl -L -O https://dl.influxdata.com/telegraf/releases/telegraf_1.10.3-1_amd64.deb
+            dpkg -i telegraf_1.10.3-1_amd64.deb
+
+
+            # Telegraf Configuration
+            curl -L -o jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
+            chmod +x ./jq
+            mv jq /usr/bin
+            echo "serverid=$(sudo curl GET  -s 'http://169.254.169.254/openstack/latest/meta_data.json' |jq -r '.uuid' )" >> /etc/default/telegraf
+
+            mv /etc/telegraf/telegraf.conf /etc/telegraf/telegraf-orig.conf
+            if [ $isprodvm = "non-prod" ]
+            then
+              curl -o /etc/telegraf/telegraf.conf https://raw.githubusercontent.com/mayankkapoor/statuscheck/master/telegraf_nonprod.conf
+            else
+              curl -o /etc/telegraf/telegraf.conf https://raw.githubusercontent.com/mayankkapoor/statuscheck/master/telegraf_prod.conf
+            fi
+            curl -o /etc/telegraf/longrunning.sh https://raw.githubusercontent.com/mayankkapoor/statuscheck/master/longrunning.sh
+            curl -o /etc/telegraf/commands.sh https://raw.githubusercontent.com/mayankkapoor/statuscheck/master/commands.sh
+
+
+            if [ $istelegrafon = "stop" ]
+            then
+              systemctl $istelegrafon telegraf
+            else
+              systemctl enable telegraf
+              systemctl $istelegrafon telegraf
+            fi
+
+  cassandra3:
+    type: OS::Nova::Server
+    depends_on: [ port3, cassandra1 ]
+    properties:
+      name: { get_attr: [cassandra3_name, value] }
+      flavor: { get_param: flavor }
+      key_name: { get_param: key }
+      availability_zone: { get_param: az3 }
+      block_device_mapping_v2:
+        - device_name: vda
+          volume_id: { get_resource: cassandra3_volume }
+          delete_on_termination: True
+      networks:
+        - port: { get_resource: port3 }
+      user_data_format: RAW
+      metadata: { db_instance: true }
+      user_data:
+        str_replace:
+          params:
+            $proxy_host: { get_param: proxy_host }
+            $proxy_port: { get_param: proxy_port }
+            $db_pass: { get_param: db_pass }
+            $commandLog: { get_param: commandLog }
+            $isprodvm: { get_param: isprodvm}
+            $db: { get_param: custom_db }
+            $ip1: { get_attr: [port1, fixed_ips, 0, ip_address] }
+            $ip2: { get_attr: [port2, fixed_ips, 0, ip_address] }
+            $ip3: { get_attr: [port3, fixed_ips, 0, ip_address] }
+          template: |
+            #!/bin/bash
+            echo "$ip1  cassandra1" >> /etc/hosts
+            echo "$ip2  cassandra2" >> /etc/hosts
+            echo "$ip2  cassandra3" >> /etc/hosts
+            rm -rf /var/lib/apt/lists/lock
+            export http_proxy=http://$proxy_host:$proxy_port
+            export https_proxy=http://$proxy_host:$proxy_port
+
+            echo "export http_proxy=http://$proxy_host:$proxy_port" >> /etc/profile.d/proxy.sh
+            echo "export https_proxy=http://$proxy_host:$proxy_port" >> /etc/profile.d/proxy.sh
+
+            curl -o /etc/apt/sources.list https://raw.githubusercontent.com/mayankkapoor/HeatTemplates/master/sources.list
+
+            apt-get update
+            # Snoopy install
+            if [ $commandLog = True ]
+            then
+               apt-get update -y
+               apt-get install libtool-bin -y
+               rm -f snoopy-install.sh
+               curl -L -o snoopy-install.sh https://github.com/a2o/snoopy/raw/install/doc/install/bin/snoopy-install.sh
+               chmod 755 snoopy-install.sh
+               ./snoopy-install.sh git-master
+               chmod -R 755 /var/log/auth.log
+               snoopy-enable
+            else
+              echo "snoopy not installed"
+            fi
+
+            # Installing Docker
+            apt-get install apt-transport-https ca-certificates curl software-properties-common -y
+            curl -fsSL https://download.docker.com/linux/ubuntu/gpg | apt-key add -
+            add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+            apt update
+            apt-get install docker-ce python-pip -y
+            mkdir -p /etc/systemd/system/docker.service.d/
+            cat << EOF > /etc/systemd/system/docker.service.d/proxy.conf
+            [Service]
+            Environment="HTTP_PROXY=http://$proxy_host:$proxy_port"
+            Environment="HTTPS_PROXY=http://$proxy_host:$proxy_port"
+            EOF
+            systemctl daemon-reload && systemctl restart docker
+            systemctl enable docker
+
+            
+            docker pull cassandra:3.11.4
+            
+            mkdir -p /root/cassandra-data
+            
+            cat <<EOF >>/root/cassandra-data/init.cql
+            ALTER USER 'cassandra' WITH PASSWORD '$db_pass';
+            CREATE KEYSPACE $db WITH replication = { 'class' : 'SimpleStrategy', 'replication_factor' : 3};
+            EOF
+            
+            mkdir -p /root/cassandra-config
+            wget https://raw.githubusercontent.com/mayankkapoor/HeatTemplates/master/cassandra-config.yaml -O /root/cassandra-config/cassandra.yaml
+            sed -i 's/master_ip/$ip1/g' /root/cassandra-config/cassandra.yaml
+            sed -i 's/node_ip/$ip3/g' /root/cassandra-config/cassandra.yaml
+            
+            docker run --restart always -d --name=cassandra3 --hostname=cassandra3 -v "/etc/hosts:/etc/hosts" -v "/root/cassandra-data:/var/lib/cassandra" -v "/root/cassandra-config/cassandra.yaml:/etc/cassandra/cassandra.yaml" -e "CASSANDRA_BROADCAST_ADDRESS=$ip3" -e "CASSANDRA_SEEDS=$ip1" -p 7000:7000 -p 9042:9042 cassandra:3.11.4
+            
+            echo "sleeping now for 5 min"
+            sleep 300
+            docker exec -i cassandra3 cqlsh localhost 9042 -u cassandra -p cassandra -f /var/lib/cassandra/init.cql
+          
+            curl -L -O https://dl.influxdata.com/telegraf/releases/telegraf_1.10.3-1_amd64.deb
+            dpkg -i telegraf_1.10.3-1_amd64.deb
+
+
+            # Telegraf Configuration 
+            curl -L -o jq https://github.com/stedolan/jq/releases/download/jq-1.6/jq-linux64
+            chmod +x ./jq
+            mv jq /usr/bin
+            echo "serverid=$(sudo curl GET  -s 'http://169.254.169.254/openstack/latest/meta_data.json' |jq -r '.uuid' )" >> /etc/default/telegraf
+
+            mv /etc/telegraf/telegraf.conf /etc/telegraf/telegraf-orig.conf
+            if [ $isprodvm = "non-prod" ]
+            then
+              curl -o /etc/telegraf/telegraf.conf https://raw.githubusercontent.com/mayankkapoor/statuscheck/master/telegraf_nonprod.conf
+            else
+              curl -o /etc/telegraf/telegraf.conf https://raw.githubusercontent.com/mayankkapoor/statuscheck/master/telegraf_prod.conf
+            fi
+            curl -o /etc/telegraf/longrunning.sh https://raw.githubusercontent.com/mayankkapoor/statuscheck/master/longrunning.sh
+            curl -o /etc/telegraf/commands.sh https://raw.githubusercontent.com/mayankkapoor/statuscheck/master/commands.sh
+
+            if [ $istelegrafon = "stop" ]
+            then
+              systemctl $istelegrafon telegraf
+            else
+              systemctl enable telegraf
+              systemctl $istelegrafon telegraf
+            fi
+
+outputs:
+  db_engine: 
+    description: Database engine name
+    value: Cassandra
+  db_engine_version: 
+    description: Database Version
+    value: Cassandra v3.11.4
+  keypair: 
+    description: Keypair to connect to Database instances
+    value: { get_param: key }
+  flavor: 
+    description: Database instance flavor
+    value: { get_param: flavor }
+  network_name: 
+    description: Database network 
+    value: { get_param: network_name }
+  subnet_name: 
+    description: Database subnet
+    value: { get_param: subnet_name }
+  nodes_pubip: 
+    description: Database instance public ip
+    value:
+      str_replace:
+        template: $host1,$host2,$host3
+        params:
+          $host1: { get_attr: [cassandra1_floatingip, floating_ip_address] }
+          $host2: { get_attr: [cassandra2_floatingip, floating_ip_address] }
+          $host3: { get_attr: [cassandra3_floatingip, floating_ip_address] }
+  nodes_pvtip: 
+    description: Database instance private ip
+    value:
+      str_replace:
+        template: $pvtip1,$pvtip2,$pvtip3
+        params:
+          $pvtip1: { get_attr: [port1, fixed_ips, 0, ip_address] }
+          $pvtip2: { get_attr: [port2, fixed_ips, 0, ip_address] }
+          $pvtip3: { get_attr: [port3, fixed_ips, 0, ip_address] }
+  connection_url:
+    description: Cassandra cluster connection url
+    value:
+      str_replace:
+        template: cassandra://cassandra:$pass@$host1:9042,$host2:9042,$host3:9042
+        params:
+          $pass: { get_param: db_pass }
+          $host1: { get_attr: [cassandra1_floatingip, floating_ip_address] }
+          $host2: { get_attr: [cassandra2_floatingip, floating_ip_address] }
+          $host3: { get_attr: [cassandra3_floatingip, floating_ip_address] }
