@@ -144,10 +144,10 @@ resources:
           rm -rf /var/lib/apt/lists/lock
           export http_proxy=$proxy
           export https_proxy=$proxy
-          # export no_proxy=127.0.0.1,localhost,10,192.168,.jio.com
+          # export no_proxy=127.0.0.1,localhost,10,192.168
           echo "export http_proxy=$proxy" >> /etc/profile.d/proxy.sh
           echo "export https_proxy=$proxy" >> /etc/profile.d/proxy.sh
-          # echo "export no_proxy=127.0.0.1,localhost,10,192.168,.jio.com" >> /etc/profile.d/proxy.sh
+          # echo "export no_proxy=127.0.0.1,localhost,10,192.168" >> /etc/profile.d/proxy.sh
 
           ##### Update sources.list based on bootImage
           if [ $bootImage = "Ubuntu1604" ]
